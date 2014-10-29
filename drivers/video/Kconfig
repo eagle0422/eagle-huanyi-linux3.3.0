@@ -23,6 +23,10 @@ source "drivers/gpu/drm/Kconfig"
 
 source "drivers/gpu/stub/Kconfig"
 
+#Added by HuanYi eagle
+source "drivers/video/fbtft/Kconfig"	
+#Added END
+
 config VGASTATE
        tristate
        default n

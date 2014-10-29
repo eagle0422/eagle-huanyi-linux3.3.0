@@ -113,6 +113,7 @@ extern struct platform_device da8xx_serial_device;
 extern struct emac_platform_data da8xx_emac_pdata;
 extern struct da8xx_lcdc_platform_data sharp_lcd035q3dg01_pdata;
 extern struct da8xx_lcdc_platform_data sharp_lk043t1dg01_pdata;
+extern struct da8xx_lcdc_platform_data huanyi_shx280t39_pdata;
 
 
 extern const short da830_emif25_pins[];
@@ -144,6 +145,19 @@ extern const short da850_vpif_display_pins[];
 
 extern const short da850_i2c0_pins[];
 extern const short da850_i2c1_pins[];
+
+//Added by HuanYi eagle
+extern const short da850_uart0_pins[];
+extern const short da850_uart1_pins[];
+extern const short da850_spi0_pins[];
+extern const short da850_spi1_pins[];
+extern const short da850_user_pins[];
+extern const short da850_key_pins[];
+extern const short da850_tsc2046_pins[];
+extern const short da850_other_pins[];
+extern const short da850_leds_pins[];
+//Added END
+
 extern const short da850_lcdcntl_pins[];
 
 #endif /* __ASM_ARCH_DAVINCI_DA8XX_H */

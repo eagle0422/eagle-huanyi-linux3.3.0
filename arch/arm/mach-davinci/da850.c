@@ -442,8 +442,8 @@ static struct clk_lookup da850_clks[] = {
 static const struct mux_config da850_pins[] = {
 #ifdef CONFIG_DAVINCI_MUX
 	/* UART0 function */
-	MUX_CFG(DA850, NUART0_CTS,	3,	24,	15,	2,	false)
-	MUX_CFG(DA850, NUART0_RTS,	3,	28,	15,	2,	false)
+	//MUX_CFG(DA850, NUART0_CTS,	3,	24,	15,	2,	false)	//Modified by HuanYi eagle
+	//MUX_CFG(DA850, NUART0_RTS,	3,	28,	15,	2,	false)	//Modified by HuanYi eagle
 	MUX_CFG(DA850, UART0_RXD,	3,	16,	15,	2,	false)
 	MUX_CFG(DA850, UART0_TXD,	3,	20,	15,	2,	false)
 	/* UART1 function */
@@ -458,7 +458,22 @@ static const struct mux_config da850_pins[] = {
 	/* I2C0 function */
 	MUX_CFG(DA850, I2C0_SDA,	4,	12,	15,	2,	false)
 	MUX_CFG(DA850, I2C0_SCL,	4,	8,	15,	2,	false)
+
+	//Added by HuanYi eagle
+	/* SPI0 function */
+	MUX_CFG(DA850, SPI0_CS_0,	4,	4,	15,	1,	false)
+	MUX_CFG(DA850, SPI0_CLK,	3,	0,	15,	1,	false)
+	MUX_CFG(DA850, SPI0_SOMI,	3,	8,	15,	1,	false)
+	MUX_CFG(DA850, SPI0_SIMO,	3,	12,	15,	1,	false)
+	/* SPI1 function */
+	MUX_CFG(DA850, SPI1_CS_0,	5,	4,	15,	1,	false)
+	MUX_CFG(DA850, SPI1_CLK,	5,	8,	15,	1,	false)
+	MUX_CFG(DA850, SPI1_SOMI,	5,	16,	15,	1,	false)
+	MUX_CFG(DA850, SPI1_SIMO,	5,	20,	15,	1,	false)
+	//Added END
+
 	/* EMAC function */
+#if 0	//Modified  by HuanYi eagle
 	MUX_CFG(DA850, MII_TXEN,	2,	4,	15,	8,	false)
 	MUX_CFG(DA850, MII_TXCLK,	2,	8,	15,	8,	false)
 	MUX_CFG(DA850, MII_COL,		2,	12,	15,	8,	false)
@@ -476,6 +491,7 @@ static const struct mux_config da850_pins[] = {
 	MUX_CFG(DA850, MII_RXD_0,	3,	28,	15,	8,	false)
 	MUX_CFG(DA850, MDIO_CLK,	4,	0,	15,	8,	false)
 	MUX_CFG(DA850, MDIO_D,		4,	4,	15,	8,	false)
+#endif	//Modified END
 	MUX_CFG(DA850, RMII_TXD_0,	14,	12,	15,	8,	false)
 	MUX_CFG(DA850, RMII_TXD_1,	14,	8,	15,	8,	false)
 	MUX_CFG(DA850, RMII_TXEN,	14,	16,	15,	8,	false)
@@ -508,6 +524,8 @@ static const struct mux_config da850_pins[] = {
 	MUX_CFG(DA850,	AXR_2,		2,	20,	15,	1,	false)
 	MUX_CFG(DA850,	AXR_1,		2,	24,	15,	1,	false)
 	MUX_CFG(DA850,	AXR_0,		2,	28,	15,	1,	false)
+
+
 	/* LCD function */
 	MUX_CFG(DA850, LCD_D_7,		16,	8,	15,	2,	false)
 	MUX_CFG(DA850, LCD_D_6,		16,	12,	15,	2,	false)
@@ -592,11 +610,50 @@ static const struct mux_config da850_pins[] = {
 	MUX_CFG(DA850, EMA_CLK,		6,	0,	15,	1,	false)
 	MUX_CFG(DA850, EMA_WAIT_1,	6,	24,	15,	1,	false)
 	MUX_CFG(DA850, NEMA_CS_2,	7,	0,	15,	1,	false)
+	
+	//Added by HuanYi eagle
+	
+	/* LCD Control  Pins */
+	MUX_CFG(DA850, GPIO8_15,	18,	8,	15,	8,	false)	//	 BL
+	MUX_CFG(DA850, GPIO2_0,		 6,	28,	15,	8,	false)	//	 nCS
+	MUX_CFG(DA850, GPIO6_14,	13,	4,	15,	8,	false)	//	 RST
+	
+	/* Key Pins */
+	MUX_CFG(DA850, GPIO1_12,	 2, 12, 15, 4,	false)	//	Key1
+	MUX_CFG(DA850, GPIO6_8,		13, 28, 15, 8,	false)	//	Key2
+	MUX_CFG(DA850, GPIO6_9,		13, 24, 15, 8,	false)	//	Key3
+	MUX_CFG(DA850, GPIO6_10,	13, 20, 15, 8,	false)	//	Key4
+	MUX_CFG(DA850, GPIO6_11,	13, 16, 15, 8,	false)	//	Key5
+	MUX_CFG(DA850, GPIO6_13,	13,  8, 15, 8,	false)	//	Key6
+	MUX_CFG(DA850, GPIO8_7,		 2, 28, 15, 4,	false)	//	Key7
+	MUX_CFG(DA850, GPIO1_14,	 2,	 4, 15, 4,	false)	//	Key8
+	MUX_CFG(DA850, GPIO1_13,	 2,	 8, 15, 4,	false)	//	Key9
+
+	/* led Pins */
+	MUX_CFG(DA850, GPIO8_12,	18, 20, 15, 8,	false)	//	Driver a LED for test
+	MUX_CFG(DA850, GPIO1_11,	 2,	16, 15, 4,	false)
+	MUX_CFG(DA850, GPIO1_10,	 2,	20, 15, 4,	false)
+	MUX_CFG(DA850, GPIO1_9,		 2,	24, 15, 4,	false)	//	leds-gpio Register failed with error -16
+	MUX_CFG(DA850, GPIO0_0,		 1,	28, 15, 8,	false)
+
+	/* TSC2046 */
+	MUX_CFG(DA850, GPIO2_14,	 5,  4, 15, 8,	false)	//	CS
+	MUX_CFG(DA850, GPIO6_12,	13,	12, 15, 8,	false)	//	BUSY
+	MUX_CFG(DA850, GPIO6_3,	 	19,	12, 15, 8,	false)	//	IRQ
+
+	/* Other Pins*/
+	MUX_CFG(DA850, GPIO6_1,		19, 20, 15, 8,	false)	//	tw9910 IRQ
+	MUX_CFG(DA850, GPIO8_14,	18,	12, 15, 8,	false)	//	Video Detect
+	MUX_CFG(DA850, GPIO8_13,	18,	16, 15, 8,	false)	//	Audio Detect
+	MUX_CFG(DA850, GPIO6_6,	 	14,	 4, 15, 8,	false)	//	BELL
+
+	//Added END
+	
 	/* GPIO function */
 	MUX_CFG(DA850, GPIO2_4,		6,	12,	15,	8,	false)
 	MUX_CFG(DA850, GPIO2_6,		6,	4,	15,	8,	false)
 	MUX_CFG(DA850, GPIO2_8,		5,	28,	15,	8,	false)
-	MUX_CFG(DA850, GPIO2_15,	5,	0,	15,	8,	false)
+	MUX_CFG(DA850, GPIO2_15,	5,	0,	15,	8,	false)	//NET Power Down
 	MUX_CFG(DA850, GPIO3_12,	7,	12,	15,	8,	false)
 	MUX_CFG(DA850, GPIO3_13,	7,	8,	15,	8,	false)
 	MUX_CFG(DA850, GPIO4_0,		10,	28,	15,	8,	false)
@@ -658,7 +715,63 @@ const short da850_i2c1_pins[] __initconst = {
 	-1
 };
 
-const short da850_lcdcntl_pins[] __initconst = {
+//Added by HuanYi eagle
+
+const short da850_uart0_pins[] __initdata = {
+	//DA850_NUART0_CTS, DA850_NUART0_RTS, 
+	DA850_UART0_RXD, DA850_UART0_TXD,
+	-1
+};
+
+const short da850_uart1_pins[] __initdata = {
+	//DA850_NUART0_CTS, DA850_NUART0_RTS, 
+	DA850_UART1_RXD, DA850_UART1_TXD,
+	-1
+};
+
+const short da850_spi0_pins[] __initdata = {
+	DA850_SPI0_CS_0, DA850_SPI0_CLK, 
+	DA850_SPI0_SOMI, DA850_SPI0_SIMO,
+	-1
+};
+
+const short da850_spi1_pins[] __initdata = {
+	DA850_SPI1_CS_0, DA850_SPI1_CLK, 
+	DA850_SPI1_SOMI, DA850_SPI1_SIMO,
+	-1
+};
+
+const short da850_key_pins[] __initdata = {
+	DA850_GPIO1_12, DA850_GPIO6_8, DA850_GPIO6_9, DA850_GPIO6_10,
+	DA850_GPIO6_11, DA850_GPIO6_13, DA850_GPIO8_7, 
+	DA850_GPIO1_14,	DA850_GPIO1_13,
+	-1
+};
+
+const short da850_tsc2046_pins[] __initdata = {
+	DA850_GPIO2_14, DA850_GPIO6_12, 
+	DA850_GPIO6_3,
+	-1
+};
+
+const short da850_other_pins[] __initdata = {
+	DA850_GPIO6_1,DA850_GPIO8_14,	//tw9900
+	DA850_GPIO8_13,					//tlv320aic3
+	//DA850_GPIO6_6,				//bell
+	-1
+};
+
+const short da850_leds_pins[] __initdata = {
+	DA850_GPIO1_11, DA850_GPIO1_10,	//LED
+	DA850_GPIO8_12, DA850_GPIO0_0,	//LED
+	DA850_GPIO8_15,					//LCD_BL
+	DA850_GPIO6_6,					//BELL
+	-1	
+};
+
+//Added END
+
+const short da850_lcdcntl_pins[] __initdata = {
 	DA850_LCD_D_0, DA850_LCD_D_1, DA850_LCD_D_2, DA850_LCD_D_3,
 	DA850_LCD_D_4, DA850_LCD_D_5, DA850_LCD_D_6, DA850_LCD_D_7,
 	DA850_LCD_D_8, DA850_LCD_D_9, DA850_LCD_D_10, DA850_LCD_D_11,
@@ -1002,7 +1115,6 @@ static int da850_set_voltage(unsigned int index)
 
 	return regulator_set_voltage(cvdd, opp->cvdd_min, opp->cvdd_max);
 }
-
 static int da850_regulator_init(void)
 {
 	cvdd = regulator_get(NULL, "cvdd");

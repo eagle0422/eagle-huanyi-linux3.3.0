@@ -50,9 +50,42 @@
 #include <media/tvp514x.h>
 #include <media/adv7343.h>
 
+#include <linux/ds2782_battery.h>	//Added by HuanYi eagle
+#include <linux/spi/ads7846.h>
+#include <../drivers/video/fbtft/fbtft.h>
+
 #define DA850_EVM_PHY_ID		"davinci_mdio-0:00"
+
+
+//Added by HuanYi eagle
+#define DA850_LCD_BL_PIN		GPIO_TO_PIN(8, 15)
+#define DA850_LCD_RST_PIN		GPIO_TO_PIN(6, 14)
+#define DA850_LCD_NCS_PIN		GPIO_TO_PIN(2,  0)
+
+#define DA850_TSC_PEN			GPIO_TO_PIN(6,  3)
+#define DA850_TSC_CS			GPIO_TO_PIN(2, 14)
+#define DA850_TSC_BUSY			GPIO_TO_PIN(6, 12)
+
+#define DA850_BUTTON_1			GPIO_TO_PIN(1, 12)
+#define DA850_BUTTON_2			GPIO_TO_PIN(6,  8)
+#define DA850_BUTTON_3			GPIO_TO_PIN(6,  9)
+#define DA850_BUTTON_4			GPIO_TO_PIN(6, 10)
+#define DA850_BUTTON_5			GPIO_TO_PIN(6, 11)
+#define DA850_BUTTON_6			GPIO_TO_PIN(6, 13)
+#define DA850_BUTTON_7			GPIO_TO_PIN(8,  7)
+#define DA850_BUTTON_8			GPIO_TO_PIN(1, 14)
+#define DA850_BUTTON_9			GPIO_TO_PIN(1, 13)
+
+#define DA850_LED_1			GPIO_TO_PIN(1, 11)
+#define DA850_LED_2			GPIO_TO_PIN(1, 10)
+#define DA850_LED_3			GPIO_TO_PIN(8, 12)
+#define DA850_LED_4			GPIO_TO_PIN(0,  0)
+//Added END
+
+#if 0	//Modified by HuanYi eagle
 #define DA850_LCD_PWR_PIN		GPIO_TO_PIN(2, 8)
 #define DA850_LCD_BL_PIN		GPIO_TO_PIN(2, 15)
+#endif	//Modified END
 
 #define DA850_MMCSD_CD_PIN		GPIO_TO_PIN(4, 0)
 #define DA850_MMCSD_WP_PIN		GPIO_TO_PIN(4, 1)
@@ -62,6 +95,8 @@
 
 #define DA850_MII_MDIO_CLKEN_PIN	GPIO_TO_PIN(2, 6)
 
+
+#ifdef USE_SPI_FLASH	//Added by HuanYi eagle
 static struct mtd_partition da850evm_spiflash_part[] = {
 	[0] = {
 		.name = "UBL",
@@ -125,6 +160,97 @@ static struct spi_board_info da850evm_spi_info[] = {
 		.chip_select		= 0,
 	},
 };
+#endif 		//Modified END
+
+
+
+//Added by HuanYi eagle
+
+static int ads7846_get_pendown_state(void)
+{
+    return !gpio_get_value(DA850_TSC_PEN);
+}
+
+
+struct davinci_spi_config ads7846_spi_config = {
+	.wdelay         = 0,
+	.odd_parity     = 8,
+	.parity_enable  = 8,
+	/*.wait_enable    = 0,
+	.lsb_first      = 0,
+	.timer_disable  = 0,
+	.clk_high       = 0,
+	.phase_in       = 1,
+	.clk_internal   = 1,
+	.loop_back      = 0,
+	.cs_hold        = 1,
+	.intr_level     = 0,
+	.pin_op_modes   = SPI_OPMODE_3PIN,
+#ifndef CONFIG_SPI_INTERRUPT
+	.poll_mode      = 1,
+#endif
+*/
+};
+
+
+struct ads7846_platform_data ads7846_config = {
+	.model			= 7846, 
+	.x_min			= 150,
+	.x_max 		    = 3830, 
+	.y_min			  = 190,
+	.y_max 		   = 3830, 
+	.vref_delay_usecs	 = 100,
+	.x_plate_ohms		  = 900,
+	.y_plate_ohms		  = 900,
+	.pressure_max		  = 255, 
+	.debounce_max		 = 10,
+	.debounce_rep		  = 1,
+	.debounce_tol		  = 50, 
+	.get_pendown_state	  = ads7846_get_pendown_state, 
+	.keep_vref_on = 1,
+	.wakeup 			= true,
+	.gpio_pendown		  = DA850_TSC_PEN,
+	};
+
+static struct spi_board_info da850evm_spi_info[] = {
+	{
+        .modalias = "fb_ili9341",
+        .max_speed_hz = 32000000,
+        .bus_num = 0,
+        .chip_select = 0,
+        .mode = SPI_MODE_0,
+        .platform_data = &(struct fbtft_platform_data) {
+            .display = {
+                    .buswidth = 9,
+                    .backlight = 1,
+            },
+            .bgr = true,
+            .gpios = (const struct fbtft_gpio []) {
+                    { "reset", 23 },
+                    { "led", 24 },
+                    { "dc", 25 },
+                    {},
+            },
+        }
+    },
+
+	{
+        .modalias = "ads7846",
+        .max_speed_hz = 1500000,
+        .bus_num = 1,
+        .chip_select = 0,
+        .mode  = SPI_MODE_0,
+        
+        //.irq = 128,//GPIO1[11]
+        .irq = 128,//gpio_to_irq(DA850_TSC_PEN),//DA850_TSC_PEN,
+
+		.controller_data	= &ads7846_spi_config,
+        .platform_data		= &ads7846_config,
+  }, 
+};
+
+//Added END
+
 
 #ifdef CONFIG_MTD
 static void da850_evm_m25p80_notify_add(struct mtd_info *mtd)
@@ -236,7 +362,8 @@ static struct mtd_partition da850_evm_nandflash_partition[] = {
 	{
 		.name		= "kernel",
 		.offset		= 0x200000,
-		.size		= SZ_2M,
+//		.size		= SZ_2M,
+		.size		= SZ_4M,	//Modified by HuanYi eagle
 		.mask_flags	= 0,
 	},
 	{
@@ -260,7 +387,7 @@ static struct davinci_aemif_timing da850_evm_nandflash_timing = {
 static struct davinci_nand_pdata da850_evm_nandflash_data = {
 	.parts		= da850_evm_nandflash_partition,
 	.nr_parts	= ARRAY_SIZE(da850_evm_nandflash_partition),
-	.ecc_mode	= NAND_ECC_HW,
+	.ecc_mode	= NAND_ECC_NONE,	//NAND_ECC_HW,	//Modified by HuanYi eagle
 	.ecc_bits	= 4,
 	.bbt_options	= NAND_BBT_USE_FLASH,
 	.timing		= &da850_evm_nandflash_timing,
@@ -291,7 +418,7 @@ static struct platform_device da850_evm_nandflash_device = {
 
 static struct platform_device *da850_evm_devices[] = {
 	&da850_evm_nandflash_device,
-	&da850_evm_norflash_device,
+	//&da850_evm_norflash_device,		//Modified by HuanYi eagle
 };
 
 #define DA8XX_AEMIF_CE2CFG_OFFSET	0x10
@@ -310,6 +437,39 @@ static void __init da850_evm_init_nor(void)
 
 	iounmap(aemif_addr);
 }
+
+// Added by HuanYi eagle
+#define DA8XX_AEMIF_CE2CFG_OFFSET	0x10
+#define DA8XX_AEMIF_CE3CFG_OFFSET	0x14
+#define DA8XX_AEMIF_ASIZE_16BIT		0x1
+
+static void __init da850_evm_init_nand(void)
+{
+	void __iomem *aemif_addr;
+	u32 ce3cfg;
+
+	aemif_addr = ioremap(DA8XX_AEMIF_CTL_BASE, SZ_32K);
+
+	ce3cfg = 0
+		| (0 << 31)	/* selectStrobe */
+		| (0 << 30)	/* extWait */
+		| (0 << 26)	/* writeSetup */
+		| (3 << 20)	/* writeStrobe  30 ns */
+		| (3 << 17)	/* writeHold    30 ns */
+		| (2 << 13)	/* readSetup    20 ns */
+		| (4 << 7)	/* readStrobe   40 ns */
+		| (0 << 4)	/* readHold */
+		| (0 << 2)	/* turnAround */
+		| (0 << 0)	/* asyncSize    8-bit bus */
+		;
+
+	writel(ce3cfg, aemif_addr + DA8XX_AEMIF_CE3CFG_OFFSET);
+
+	iounmap(aemif_addr);
+}
+
+//Added END
+
 
 static const short da850_evm_nand_pins[] = {
 	DA850_EMA_D_0, DA850_EMA_D_1, DA850_EMA_D_2, DA850_EMA_D_3,
@@ -732,7 +892,17 @@ static struct pca953x_platform_data da850_evm_bb_expander_info = {
 	.names		= da850_evm_bb_exp,
 };
 
+
+//Added by HuanYi eagle
+static struct ds278x_platform_data ds2782_pdata = {
+	
+		.rsns = 20,
+		
+};
+//Added END
+
 static struct i2c_board_info __initdata da850_evm_i2c_devices[] = {
+#if 0	//Modified by HuanYi eagle
 	{
 		I2C_BOARD_INFO("tlv320aic3x", 0x18),
 	},
@@ -744,6 +914,23 @@ static struct i2c_board_info __initdata da850_evm_i2c_devices[] = {
 		I2C_BOARD_INFO("tca6416", 0x21),
 		.platform_data = &da850_evm_bb_expander_info,
 	},
+#endif //Modified END
+
+	{
+		I2C_BOARD_INFO("tlv320aic3x", 0x18),
+	},
+		
+	{
+		I2C_BOARD_INFO("ds2782-battery", 0x34),
+		.platform_data = &ds2782_pdata,
+	},
+		
+	{
+		I2C_BOARD_INFO("tw9910", 0x44),
+	},
+
+
+		
 };
 
 static struct davinci_i2c_platform_data da850_evm_i2c_0_pdata = {
@@ -785,7 +972,7 @@ static const short da850_evm_mcasp_pins[] __initconst = {
 	DA850_AXR_11, DA850_AXR_12,
 	-1
 };
-
+#if 0	//Modified by HuangYi eagle
 static int da850_evm_mmc_get_ro(int index)
 {
 	return gpio_get_value(DA850_MMCSD_WP_PIN);
@@ -795,10 +982,11 @@ static int da850_evm_mmc_get_cd(int index)
 {
 	return !gpio_get_value(DA850_MMCSD_CD_PIN);
 }
+#endif	//Modified END
 
 static struct davinci_mmc_config da850_mmc_config = {
-	.get_ro		= da850_evm_mmc_get_ro,
-	.get_cd		= da850_evm_mmc_get_cd,
+	.get_ro		= NULL,	//da850_evm_mmc_get_ro,	//Modified by HuanYi eale
+	.get_cd		= NULL,	//da850_evm_mmc_get_cd,	//Modified by HuanYi eale
 	.wires		= 4,
 	.max_freq	= 50000000,
 	.caps		= MMC_CAP_MMC_HIGHSPEED | MMC_CAP_SD_HIGHSPEED,
@@ -808,7 +996,7 @@ static struct davinci_mmc_config da850_mmc_config = {
 static const short da850_evm_mmcsd0_pins[] __initconst = {
 	DA850_MMCSD0_DAT_0, DA850_MMCSD0_DAT_1, DA850_MMCSD0_DAT_2,
 	DA850_MMCSD0_DAT_3, DA850_MMCSD0_CLK, DA850_MMCSD0_CMD,
-	DA850_GPIO4_0, DA850_GPIO4_1,
+	//DA850_GPIO4_0, DA850_GPIO4_1,		//Modified by HuanYi eale
 	-1
 };
 
@@ -818,9 +1006,10 @@ static void da850_panel_power_ctrl(int val)
 	gpio_set_value(DA850_LCD_BL_PIN, val);
 
 	/* lcd power */
-	gpio_set_value(DA850_LCD_PWR_PIN, val);
+	//gpio_set_value(DA850_LCD_PWR_PIN, val);	//Modified by HuanYi eagle
 }
 
+#if 0	//Modified by HuangYi eagle
 static int da850_lcd_hw_init(void)
 {
 	int status;
@@ -845,7 +1034,62 @@ static int da850_lcd_hw_init(void)
 	da850_panel_power_ctrl(1);
 
 	return 0;
+	
 }
+#endif 	//Modified END
+
+//Added by HuangYi eagle
+static int da850_lcd_hw_init(void)
+{
+	int status;
+	
+#if 0
+	status = gpio_request(DA850_LCD_BL_PIN, "lcd bl\n");
+	if (status < 0){
+		printk("DA850_LCD_BL_PIN return\n");
+		gpio_free(DA850_LCD_BL_PIN);
+		return status;
+	}
+#endif	
+	status = gpio_request(DA850_LCD_RST_PIN, "lcd rst\n");
+	if (status < 0){
+		printk("DA850_LCD_RST_PIN return\n");
+		gpio_free(DA850_LCD_RST_PIN);
+		return status;
+	}
+	
+	status = gpio_request(DA850_LCD_NCS_PIN, "lcd ncs\n");
+	if (status < 0) {
+		printk("DA850_LCD_NCS_PIN return\n");
+		gpio_free(DA850_LCD_NCS_PIN);
+		return status;
+	}
+
+	//gpio_direction_output(DA850_LCD_BL_PIN, 0);
+	
+	gpio_direction_output(DA850_LCD_RST_PIN, 0);
+	gpio_direction_output(DA850_LCD_NCS_PIN, 0);
+
+
+	
+	/* select lcd */
+	gpio_set_value(DA850_LCD_NCS_PIN, 0);
+
+	/* enable lcd backlight */
+	//gpio_set_value(DA850_LCD_BL_PIN, 1);
+	
+	/* reset lcd */
+	gpio_set_value(DA850_LCD_RST_PIN, 0);
+	mdelay(10);
+	gpio_set_value(DA850_LCD_RST_PIN, 1);
+	mdelay(120);
+
+	return 0;
+	
+}
+//Added END
+//#ifdef CONFIG_REGULATOR		//Modified by HuanYi eagle
+#ifdef CONFIG_REGULATOR_TPS6507X
 
 /* TPS65070 voltage regulator support */
 
@@ -1015,8 +1259,12 @@ static int __init pmic_tps65070_init(void)
 					ARRAY_SIZE(da850_evm_tps65070_info));
 }
 
+#endif		//Modified by HuanYi eagle
+
 static const short da850_evm_lcdc_pins[] = {
-	DA850_GPIO2_8, DA850_GPIO2_15,
+	//DA850_GPIO2_8, DA850_GPIO2_15,		//Modified by HuanYi eagle
+	DA850_GPIO2_0,//eagle  LCD nCS
+	DA850_GPIO6_14,//eagle LCD RST
 	-1
 };
 
@@ -1043,6 +1291,9 @@ static int __init da850_evm_config_emac(void)
 	int ret;
 	u32 val;
 	struct davinci_soc_info *soc_info = &davinci_soc_info;
+	
+	soc_info->emac_pdata->rmii_en = 1;	//Added by HuanYi eagle
+	
 	u8 rmii_en = soc_info->emac_pdata->rmii_en;
 
 	if (!machine_is_davinci_da850_evm())
@@ -1437,11 +1688,11 @@ static __init int da850_wl12xx_init(void)
 static __init void da850_evm_init(void)
 {
 	int ret;
-
+#ifdef CONFIG_REGULATOR_TPS6507X	//Modified by HuanYi eagle
 	ret = pmic_tps65070_init();
 	if (ret)
 		pr_warn("%s: TPS65070 PMIC init failed: %d\n", __func__, ret);
-
+#endif	//Modified END
 	ret = da850_register_edma(da850_edma_rsv);
 	if (ret)
 		pr_warn("%s: EDMA registration failed: %d\n", __func__, ret);
@@ -1454,7 +1705,25 @@ static __init void da850_evm_init(void)
 	if (ret)
 		pr_warn("%s: I2C0 registration failed: %d\n", __func__, ret);
 
+	//Added by HuanYi eagle
+	
+	ret = davinci_cfg_reg_list(da850_spi0_pins);
+	if (ret)
+		pr_warning("da850_evm_init: spi0 mux setup failed: %d\n",ret);
 
+	ret = davinci_cfg_reg_list(da850_spi1_pins);
+	if (ret)
+		pr_warning("da850_evm_init: spi1 mux setup failed: %d\n",ret);
+	
+	ret = davinci_cfg_reg_list(da850_evm_nand_pins);
+	if (ret)
+		pr_warn("%s: NAND mux setup failed: %d\n", __func__, ret);
+
+	da850_evm_init_nand();
+
+	platform_add_devices(da850_evm_devices,ARRAY_SIZE(da850_evm_devices));
+	//Added END
+	
 	ret = da8xx_register_watchdog();
 	if (ret)
 		pr_warn("%s: watchdog registration failed: %d\n",
@@ -1465,7 +1734,7 @@ static __init void da850_evm_init(void)
 		if (ret)
 			pr_warn("%s: MMCSD0 mux setup failed: %d\n",
 				__func__, ret);
-
+#if 0	//Modified by HuanYi eagle
 		ret = gpio_request(DA850_MMCSD_CD_PIN, "MMC CD\n");
 		if (ret)
 			pr_warn("%s: can not open GPIO %d\n",
@@ -1477,7 +1746,8 @@ static __init void da850_evm_init(void)
 			pr_warn("%s: can not open GPIO %d\n",
 				__func__, DA850_MMCSD_WP_PIN);
 		gpio_direction_input(DA850_MMCSD_WP_PIN);
-
+#endif	//Modified END
+	
 		ret = da8xx_register_mmcsd0(&da850_mmc_config);
 		if (ret)
 			pr_warn("%s: MMCSD0 registration failed: %d\n",
@@ -1487,11 +1757,15 @@ static __init void da850_evm_init(void)
 		if (ret)
 			pr_warn("%s: WL12xx initialization failed: %d\n",
 				__func__, ret);
+
 	}
 
 	davinci_serial_init(&da850_evm_uart_config);
 
-	i2c_register_board_info(1, da850_evm_i2c_devices,
+	//i2c_register_board_info(1, da850_evm_i2c_devices,
+	//		ARRAY_SIZE(da850_evm_i2c_devices));
+
+	i2c_register_board_info(0, da850_evm_i2c_devices,
 			ARRAY_SIZE(da850_evm_i2c_devices));
 
 	/*
@@ -1527,9 +1801,13 @@ static __init void da850_evm_init(void)
 	ret = da850_lcd_hw_init();
 	if (ret)
 		pr_warn("%s: LCD initialization failed: %d\n", __func__, ret);
-
-	sharp_lk043t1dg01_pdata.panel_power_ctrl = da850_panel_power_ctrl,
-	ret = da8xx_register_lcdc(&sharp_lk043t1dg01_pdata);
+	
+	
+	//sharp_lk043t1dg01_pdata.panel_power_ctrl = da850_panel_power_ctrl,	//Modified by HuanYi eagle
+	
+	ret = da8xx_register_lcdc(&sharp_lk043t1dg01_pdata);	//Modified by HuanYi eagle
+	
+	//ret = da8xx_register_lcdc(&huanyi_shx280t39_pdata);	
 	if (ret)
 		pr_warn("%s: LCDC registration failed: %d\n", __func__, ret);
 
@@ -1557,6 +1835,11 @@ static __init void da850_evm_init(void)
 		pr_warn("%s: spi info registration failed: %d\n", __func__,
 			ret);
 
+	//Modified by HuanYi eagle
+	ret = da8xx_register_spi_bus(0, ARRAY_SIZE(da850evm_spi_info));
+	if (ret)
+		pr_warn("%s: SPI 0 registration failed: %d\n", __func__, ret);
+	//Modified END
 	ret = da8xx_register_spi_bus(1, ARRAY_SIZE(da850evm_spi_info));
 	if (ret)
 		pr_warn("%s: SPI 1 registration failed: %d\n", __func__, ret);

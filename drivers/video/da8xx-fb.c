@@ -232,18 +232,19 @@ static struct fb_videomode known_lcd_panels[] = {
 	/* Sharp LK043T1DG01 */
 	[1] = {
 		.name           = "Sharp_LK043T1DG01",
-		.xres           = 480,
-		.yres           = 272,
-		.pixclock       = 7833600,
-		.left_margin    = 2,
-		.right_margin   = 2,
+		.xres           = 240,
+		.yres           = 320,
+		.pixclock       = 6200000,
+		.left_margin    = 20,
+		.right_margin   = 10,
 		.upper_margin   = 2,
-		.lower_margin   = 2,
-		.hsync_len      = 41,
-		.vsync_len      = 10,
+		.lower_margin   = 4,		
+		.hsync_len      = 10,
+		.vsync_len      = 2,
 		.sync           = FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT,
 		.flag           = 0,
 	},
+#if 0	//Modified by HuanYi eagle
 	[2] = {
 		/* Hitachi SP10Q010 */
 		.name           = "SP10Q010",
@@ -256,6 +257,23 @@ static struct fb_videomode known_lcd_panels[] = {
 		.lower_margin   = 10,
 		.hsync_len      = 10,
 		.vsync_len      = 10,
+		.sync           = FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT,
+		.flag           = 0,
+	},
+#endif	
+	[2] = {
+		/* Huanyi_SHX280T39 */
+		.name           = "Huanyi_SHX280T39",		
+		.xres           = 240,
+		.yres           = 320,
+		.pixclock       = 6200000,
+		.left_margin    = 20,
+		.right_margin   = 10,
+		.upper_margin   = 2,
+		.lower_margin   = 4,
+		
+		.hsync_len      = 10,
+		.vsync_len      = 2,
 		.sync           = FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT,
 		.flag           = 0,
 	},

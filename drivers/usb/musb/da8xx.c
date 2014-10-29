@@ -326,8 +326,9 @@ static irqreturn_t da8xx_musb_interrupt(int irq, void *hci)
 		void __iomem *mregs = musb->mregs;
 		u8 devctl = musb_readb(mregs, MUSB_DEVCTL);
 		int err;
-
-		err = musb->int_usb & USB_INTR_VBUSERROR;
+//Modified by HuangYi eagle
+//		err = musb->int_usb & USB_INTR_VBUSERROR;
+		err = musb->int_usb & MUSB_INTR_VBUSERROR;
 		if (err) {
 			/*
 			 * The Mentor core doesn't debounce VBUS as needed

@@ -774,6 +774,20 @@ enum davinci_da850_index {
 	/* I2C0 function */
 	DA850_I2C0_SDA,
 	DA850_I2C0_SCL,
+	
+// Added by HuanYi eagle
+	/* SPI0 function */
+	DA850_SPI0_CS_0,
+	DA850_SPI0_CLK,
+	DA850_SPI0_SOMI,
+	DA850_SPI0_SIMO,
+	
+	/* SPI1 function */
+	DA850_SPI1_CS_0,
+	DA850_SPI1_CLK,
+	DA850_SPI1_SOMI,
+	DA850_SPI1_SIMO,
+//Added END
 
 	/* EMAC function */
 	DA850_MII_TXEN,
@@ -914,6 +928,48 @@ enum davinci_da850_index {
 	DA850_EMA_CLK,
 	DA850_EMA_WAIT_1,
 	DA850_NEMA_CS_2,
+	
+//Added by HuanYi eagle
+	/* LCD Control */
+	DA850_GPIO2_0,//eagle  LCD nCS
+	DA850_GPIO6_14,//eagle LCD RST
+	DA850_GPIO8_15,//eagle LCD BL
+	
+	/* Reserved GPIOs*/
+	DA850_GPIO8_12,//eagle  LED
+	DA850_GPIO1_11,
+	DA850_GPIO1_10,
+	DA850_GPIO1_9,
+	DA850_GPIO0_0,
+	
+	/* User Keys */
+	DA850_GPIO1_12,		//	Key1
+	DA850_GPIO6_8,		//	Key2
+	DA850_GPIO6_9,		//	Key3
+	DA850_GPIO6_10,		//	Key4
+	DA850_GPIO6_11,		//	Key5
+	DA850_GPIO6_13,		//	Key6
+	DA850_GPIO8_7,		//	Key7
+	DA850_GPIO1_14,		//	Key8
+	DA850_GPIO1_13,		//	Key9
+
+	/* TSC2046  */
+	DA850_GPIO2_14,		// 	CS
+	DA850_GPIO6_12,		//	IRQ
+	DA850_GPIO6_3,		//	BUSY
+
+	/* TW9900  */
+	DA850_GPIO6_1,		//	IRQ
+	DA850_GPIO8_14,		//	Video Detect
+
+	/* TLV320AIC3  */
+	DA850_GPIO8_13,		//	Audio Detect	
+
+	/* Bell */
+	DA850_GPIO6_6,		//	Bell	
+// Added END
+
+
 
 	/* GPIO function */
 	DA850_GPIO2_4,
@@ -924,9 +980,9 @@ enum davinci_da850_index {
 	DA850_GPIO3_13,
 	DA850_GPIO4_0,
 	DA850_GPIO4_1,
-	DA850_GPIO6_9,
-	DA850_GPIO6_10,
-	DA850_GPIO6_13,
+//	DA850_GPIO6_9,		
+//	DA850_GPIO6_10,
+//	DA850_GPIO6_13,		//Modified by HuanYi eagle
 	DA850_RTC_ALARM,
 
 	/* VPIF Capture */
