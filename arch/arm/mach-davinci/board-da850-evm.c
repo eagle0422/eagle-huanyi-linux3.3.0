@@ -53,7 +53,9 @@
 #include <linux/ds2782_battery.h>	//Added by HuanYi eagle
 #include <linux/spi/ads7846.h>
 #include <../drivers/video/fbtft/fbtft.h>
+#include <linux/platform_data/usb-davinci.h>
 
+//#include <mach/usb.h>
 #define DA850_EVM_PHY_ID		"davinci_mdio-0:00"
 
 
@@ -79,6 +81,8 @@
 #define DA850_LED_1			GPIO_TO_PIN(1, 11)
 #define DA850_LED_2			GPIO_TO_PIN(1, 10)
 #define DA850_LED_3			GPIO_TO_PIN(8, 12)
+//#define DA850_LED_3			GPIO_TO_PIN(1, 9)
+
 #define DA850_LED_4			GPIO_TO_PIN(0,  0)
 //Added END
 
@@ -212,7 +216,7 @@ struct ads7846_platform_data ads7846_config = {
 	.gpio_pendown		  = DA850_TSC_PEN,
 	};
 
-static struct spi_board_info da850evm_spi_info[] = {
+static struct spi_board_info fb_ili9341[] = {
 	{
         .modalias = "fb_ili9341",
         .max_speed_hz = 32000000,
@@ -234,20 +238,66 @@ static struct spi_board_info da850evm_spi_info[] = {
         }
     },
 
-	{
-        .modalias = "ads7846",
-        .max_speed_hz = 1500000,
-        .bus_num = 1,
-        .chip_select = 0,
-        .mode  = SPI_MODE_0,
-        
-        //.irq = 128,//GPIO1[11]
-        .irq = 128,//gpio_to_irq(DA850_TSC_PEN),//DA850_TSC_PEN,
+	
+};
 
-		.controller_data	= &ads7846_spi_config,
-        .platform_data		= &ads7846_config,
+static struct spi_board_info tsc_ads7846[] __initdata = {
+
+	[0]={
+       	 	.modalias = "ads7846",
+        	.max_speed_hz = 1500000,
+    	    .bus_num = 1,
+        	.chip_select = 0,
+	        .mode  = SPI_MODE_0,
+        
+    	    //.irq = 128,//GPIO1[11]
+        	//.irq = 128,//gpio_to_irq(DA850_TSC_PEN),//DA850_TSC_PEN,
+
+			.controller_data	= &ads7846_spi_config,
+        	.platform_data		= &ads7846_config,
   }, 
 };
+
+//Added by HuanYi eagle 
+static int da850_ads7846_init(void){	
+	
+	int status;	
+	int irq = gpio_to_irq(DA850_TSC_PEN);	
+
+	status = gpio_request(DA850_TSC_PEN, "ADS7846_PENDOWN\n");	
+
+	if (status < 0)		
+		return status;	
+	
+	status = gpio_request(DA850_TSC_CS, "ADS7846_CS\n");	
+	if (status < 0)		
+		return status;	
+	
+	gpio_direction_input(DA850_TSC_PEN);
+	
+	gpio_direction_output(DA850_TSC_CS, 0);	
+	
+	gpio_set_value(DA850_TSC_CS, 0);	
+
+	tsc_ads7846[0].irq = irq;
+	//da850_evm_spi1_info[0].irq = irq;//zmy
+
+//	da850_init_spi1(NULL, 1, tsc_spi_info,			
+//		ARRAY_SIZE(tsc_spi_info));
+
+}
+
+//Added END
+
+
+
+
+
+
+
+
+
+
 
 //Added END
 
@@ -547,6 +597,7 @@ static inline void da850_evm_setup_emac_rmii(int rmii_sel) { }
  */
 #define DA850_GPIO_KEYS_POLL_MS	200
 
+#ifdef DA850_EVM_UI_EXPANDER	//Added by HuanYi eale
 enum da850_evm_ui_exp_pins {
 	DA850_EVM_UI_EXP_SEL_C = 5,
 	DA850_EVM_UI_EXP_SEL_B,
@@ -616,6 +667,7 @@ static void da850_evm_ui_keys_init(unsigned gpio)
 		button->gpio = gpio + DA850_EVM_UI_EXP_PB8 + i;
 	}
 }
+#endif		//Added by HuanYi eagle
 
 #ifdef CONFIG_DA850_UI_SD_VIDEO_PORT
 static inline void da850_evm_setup_video_port(int video_sel)
@@ -626,6 +678,7 @@ static inline void da850_evm_setup_video_port(int video_sel)
 static inline void da850_evm_setup_video_port(int video_sel) { }
 #endif
 
+#ifdef DA850_EVM_UI_EXPANDER	//Added by HuanYi eale
 static int da850_evm_ui_expander_setup(struct i2c_client *client, unsigned gpio,
 						unsigned ngpio, void *c)
 {
@@ -701,6 +754,9 @@ static int da850_evm_ui_expander_teardown(struct i2c_client *client,
 
 	return 0;
 }
+#endif	//Added by HuanYi eagle
+
+#ifdef DA850_EVM_BB_EXPANDER	//Added by HuanYi eagle
 
 /* assign the baseboard expander's GPIOs after the UI board's */
 #define DA850_UI_EXPANDER_N_GPIOS ARRAY_SIZE(da850_evm_ui_exp)
@@ -892,8 +948,172 @@ static struct pca953x_platform_data da850_evm_bb_expander_info = {
 	.names		= da850_evm_bb_exp,
 };
 
+#endif	//Added by HuanYi eagle
 
 //Added by HuanYi eagle
+static struct gpio_keys_button da850_huanyi_keys[] = {
+	{
+		.type				= EV_KEY,
+		.active_low			= 1,
+		.wakeup				= 0,
+		.debounce_interval	= DA850_KEYS_DEBOUNCE_MS,
+		.code				= KEY_F1,
+		.gpio				= DA850_BUTTON_1,
+		.desc				= "Button 1", 
+	},
+	{
+		.type				= EV_KEY,
+		.active_low			= 1,
+		.wakeup				= 0,
+		.debounce_interval	= DA850_KEYS_DEBOUNCE_MS,
+		.code				= KEY_F2,
+		.gpio				= DA850_BUTTON_2,
+		.desc				= "Button 2", 
+	},
+
+	{
+		.type				= EV_KEY,
+		.active_low			= 1,
+		.wakeup				= 0,
+		.debounce_interval	= DA850_KEYS_DEBOUNCE_MS,
+		.code				= KEY_F3,
+		.gpio				= DA850_BUTTON_3,
+		.desc				= "Button 3", 
+	},
+	{
+		.type				= EV_KEY,
+		.active_low			= 1,
+		.wakeup				= 0,
+		.debounce_interval	= DA850_KEYS_DEBOUNCE_MS,
+		.code				= KEY_F4,
+		.gpio				= DA850_BUTTON_4,
+		.desc				= "Button 4", 
+	},
+	{
+		.type				= EV_KEY,
+		.active_low			= 1,
+		.wakeup				= 0,
+		.debounce_interval	= DA850_KEYS_DEBOUNCE_MS,
+		.code				= KEY_F5,
+		.gpio				= DA850_BUTTON_5,
+		.desc				= "Button 5", 
+	},
+
+	{
+		.type				= EV_KEY,
+		.active_low			= 1,
+		.wakeup				= 0,
+		.debounce_interval	= DA850_KEYS_DEBOUNCE_MS,
+		.code				= KEY_F6,
+		.gpio				= DA850_BUTTON_6,
+		.desc				= "Button 6", 
+	},	
+	{
+		.type				= EV_KEY,
+		.active_low			= 1,
+		.wakeup				= 0,
+		.debounce_interval	= DA850_KEYS_DEBOUNCE_MS,
+		.code				= KEY_F7,
+		.gpio				= DA850_BUTTON_7,
+		.desc				= "Button 7", 
+	},
+
+	{
+		.type				= EV_KEY,
+		.active_low			= 1,
+		.wakeup				= 0,
+		.debounce_interval	= DA850_KEYS_DEBOUNCE_MS,
+		.code				= KEY_F8,
+		.gpio				= DA850_BUTTON_8,
+		.desc				= "Button 8", 
+	},		
+};
+
+
+
+static struct gpio_keys_platform_data da850_huanyi_keys_pdata = {
+	.buttons = da850_huanyi_keys,
+	.nbuttons = ARRAY_SIZE(da850_huanyi_keys),
+	.poll_interval = DA850_GPIO_KEYS_POLL_MS,
+};
+
+static struct platform_device da850_huanyi_keys_device = {
+	.name = "gpio-keys-polled",
+	.id = 0,
+	.dev = {
+		.platform_data = &da850_huanyi_keys_pdata
+	},
+};
+
+static struct gpio_led da850_huanyi_leds[] = {
+
+	[0] = {
+		.active_low = 1,
+		.gpio = DA850_LED_1, 
+		.default_trigger = "timer",
+		.name = "huanyi_led1", 
+		.default_state = LEDS_GPIO_DEFSTATE_ON,
+	},
+		
+
+	[1] = {
+		.active_low = 1,
+		.gpio = DA850_LED_2, 
+		.default_trigger = "heartbeat",
+		.name = "huanyi_led2", 
+		.default_state = LEDS_GPIO_DEFSTATE_ON,
+	},
+	
+	[2] = {
+		.active_low = 1,
+		.gpio = DA850_LED_3, 
+		//.default_trigger = "gpio",
+		.default_trigger = "heartbeat",
+		.name = "huanyi_led3", 
+		.default_state = LEDS_GPIO_DEFSTATE_ON,
+	},
+
+
+	[3] = {
+		.active_low = 1,
+		.gpio = DA850_LED_4, 
+		.default_trigger = "heartbeat",
+		.name = "huanyi_led4", 
+		.default_state = LEDS_GPIO_DEFSTATE_ON,
+	},
+	
+	[4] = {
+		.active_low = 0,
+		.gpio = DA850_LCD_BL_PIN, 
+		.default_trigger = "backlight",
+		.name = "huanyi_lcd_bl", 
+		.default_state = LEDS_GPIO_DEFSTATE_ON,
+	},
+	/*
+	[5] = {
+		.active_low = 0,
+		.gpio = DA850_BELL, 
+		.default_trigger = "gpio",
+		.name = "huanyi_bell", 
+		.default_state = LEDS_GPIO_DEFSTATE_ON,
+	},
+	*/	
+};
+
+static struct gpio_led_platform_data da850_huanyi_leds_pdata = {
+        .leds           = da850_huanyi_leds,
+        .num_leds       = ARRAY_SIZE(da850_huanyi_leds),
+};
+
+static struct platform_device da850_huanyi_leds_device = {
+        .name   = "leds-gpio",
+        .id     = -1,
+        .dev    = {
+                .platform_data  = &da850_huanyi_leds_pdata,
+        },
+};
+
+
 static struct ds278x_platform_data ds2782_pdata = {
 	
 		.rsns = 20,
@@ -940,7 +1160,165 @@ static struct davinci_i2c_platform_data da850_evm_i2c_0_pdata = {
 
 static struct davinci_uart_config da850_evm_uart_config __initdata = {
 	.enabled_uarts = 0x7,
+		
 };
+
+//Added by HuanYi eagle
+/*
+ * USB1 VBUS is controlled by GPIO1[15], over-current is reported on GPIO2[4].
+ */
+//#define ON_BD_USB_DRV	GPIO_TO_PIN(1, 15)
+#define ON_BD_USB_DRV	GPIO_TO_PIN(2, 6)
+#define ON_BD_USB_OVC	GPIO_TO_PIN(2, 4)
+
+static const short DA850_evm_usb11_pins[] = {
+	DA850_GPIO2_6, DA850_GPIO2_4,
+	-1
+};
+
+static da8xx_ocic_handler_t DA850_evm_usb_ocic_handler;
+
+static int DA850_evm_usb_set_power(unsigned port, int on)
+{
+	gpio_set_value(ON_BD_USB_DRV, on);
+	return 0;
+}
+
+static int DA850_evm_usb_get_power(unsigned port)
+{
+	return gpio_get_value(ON_BD_USB_DRV);
+}
+
+static int DA850_evm_usb_get_oci(unsigned port)
+{
+	return !gpio_get_value(ON_BD_USB_OVC);
+}
+
+static irqreturn_t DA850_evm_usb_ocic_irq(int, void *);
+
+static int DA850_evm_usb_ocic_notify(da8xx_ocic_handler_t handler)
+{
+	int irq 	= gpio_to_irq(ON_BD_USB_OVC);
+	int error	= 0;
+
+	if (handler != NULL) {
+		DA850_evm_usb_ocic_handler = handler;
+
+		error = request_irq(irq, DA850_evm_usb_ocic_irq, IRQF_DISABLED |
+				    IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
+				    "OHCI over-current indicator", NULL);
+		if (error)
+			printk(KERN_ERR "%s: could not request IRQ to watch "
+			       "over-current indicator changes\n", __func__);
+	} else
+		free_irq(irq, NULL);
+
+	return error;
+}
+
+static struct da8xx_ohci_root_hub DA850_evm_usb11_pdata = {
+	.set_power	= DA850_evm_usb_set_power,
+	.get_power	= DA850_evm_usb_get_power,
+	.get_oci	= DA850_evm_usb_get_oci,
+	.ocic_notify	= DA850_evm_usb_ocic_notify,
+
+	/* TPS2065 switch @ 5V */
+	.potpgt		= (3 + 1) / 2,	/* 3 ms max */
+};
+
+static irqreturn_t DA850_evm_usb_ocic_irq(int irq, void *dev_id)
+{
+	DA850_evm_usb_ocic_handler(&DA850_evm_usb11_pdata, 1);
+	return IRQ_HANDLED;
+}
+
+static __init void DA850_evm_usb_init(void)
+{
+	u32 cfgchip2;
+	int ret;
+
+	/*
+	 * Set up USB clock/mode in the CFGCHIP2 register.
+	 * FYI:  CFGCHIP2 is 0x0000ef00 initially.
+	 */
+	cfgchip2 = __raw_readl(DA8XX_SYSCFG0_VIRT(DA8XX_CFGCHIP2_REG));
+
+	/* USB2.0 PHY reference clock is 24 MHz */
+	cfgchip2 &= ~CFGCHIP2_REFFREQ;
+	cfgchip2 |=  CFGCHIP2_REFFREQ_24MHZ;
+
+	/*
+	 * Select internal reference clock for USB 2.0 PHY
+	 * and use it as a clock source for USB 1.1 PHY
+	 * (this is the default setting anyway).
+	 */
+	cfgchip2 &= ~CFGCHIP2_USB1PHYCLKMUX;
+	cfgchip2 |=  CFGCHIP2_USB2PHYCLKMUX;
+
+	/*
+	 * We have to override VBUS/ID signals when MUSB is configured into the
+	 * host-only mode -- ID pin will float if no cable is connected, so the
+	 * controller won't be able to drive VBUS thinking that it's a B-device.
+	 * Otherwise, we want to use the OTG mode and enable VBUS comparators.
+	 */
+	cfgchip2 &= ~CFGCHIP2_OTGMODE;
+#ifdef	CONFIG_USB_MUSB_HOST
+	cfgchip2 |=  CFGCHIP2_FORCE_HOST;
+#else
+	cfgchip2 |=  CFGCHIP2_SESENDEN | CFGCHIP2_VBDTCTEN;
+#endif
+
+	__raw_writel(cfgchip2, DA8XX_SYSCFG0_VIRT(DA8XX_CFGCHIP2_REG));
+
+	/* USB_REFCLKIN is not used. */
+	ret = davinci_cfg_reg(DA850_USB0_DRVVBUS);
+	if (ret)
+		pr_warning("%s: USB 2.0 PinMux setup failed: %d\n",
+			   __func__, ret);
+	else {
+		/*
+		 * TPS2065 switch @ 5V supplies 1 A (sustains 1.5 A),
+		 * with the power on to power good time of 3 ms.
+		 */
+		ret = da8xx_register_usb20(1000, 3);
+		if (ret)
+			pr_warning("%s: USB 2.0 registration failed: %d\n",
+				   __func__, ret);
+	}
+
+	ret = davinci_cfg_reg_list(DA850_evm_usb11_pins);
+	if (ret) {
+		pr_warning("%s: USB 1.1 PinMux setup failed: %d\n",
+			   __func__, ret);
+		return;
+	}
+
+	ret = gpio_request(ON_BD_USB_DRV, "ON_BD_USB_DRV");
+	if (ret) {
+		printk(KERN_ERR "%s: failed to request GPIO for USB 1.1 port "
+		       "power control: %d\n", __func__, ret);
+		return;
+	}
+	gpio_direction_output(ON_BD_USB_DRV, 0);
+
+	ret = gpio_request(ON_BD_USB_OVC, "ON_BD_USB_OVC");
+	if (ret) {
+		printk(KERN_ERR "%s: failed to request GPIO for USB 1.1 port "
+		       "over-current indicator: %d\n", __func__, ret);
+		return;
+	}
+	gpio_direction_input(ON_BD_USB_OVC);
+
+	ret = da8xx_register_usb11(&DA850_evm_usb11_pdata);
+	if (ret)
+		pr_warning("%s: USB 1.1 registration failed: %d\n",
+			   __func__, ret);
+}
+
+//Added END
+
+
+
 
 /* davinci da850 evm audio machine driver */
 static u8 da850_iis_serializer_direction[] = {
@@ -1039,6 +1417,21 @@ static int da850_lcd_hw_init(void)
 #endif 	//Modified END
 
 //Added by HuangYi eagle
+
+static int da850_leds_pins_init(void)
+{
+	int status;
+
+	status = gpio_request(DA850_LED_1, "lcd rst\n");
+	if (status < 0){
+		printk("DA850_LED_1 return\n");
+		gpio_free(DA850_LED_1);
+		return status;
+	}
+	gpio_direction_output(DA850_LED_1, 0);
+	gpio_set_value(DA850_LED_1, 0);
+
+}
 static int da850_lcd_hw_init(void)
 {
 	int status;
@@ -1693,6 +2086,7 @@ static __init void da850_evm_init(void)
 	if (ret)
 		pr_warn("%s: TPS65070 PMIC init failed: %d\n", __func__, ret);
 #endif	//Modified END
+
 	ret = da850_register_edma(da850_edma_rsv);
 	if (ret)
 		pr_warn("%s: EDMA registration failed: %d\n", __func__, ret);
@@ -1709,15 +2103,35 @@ static __init void da850_evm_init(void)
 	
 	ret = davinci_cfg_reg_list(da850_spi0_pins);
 	if (ret)
-		pr_warning("da850_evm_init: spi0 mux setup failed: %d\n",ret);
+		pr_warn("da850_evm_init: spi0 mux setup failed: %d\n",ret);
 
 	ret = davinci_cfg_reg_list(da850_spi1_pins);
 	if (ret)
-		pr_warning("da850_evm_init: spi1 mux setup failed: %d\n",ret);
+		pr_warn("da850_evm_init: spi1 mux setup failed: %d\n",ret);
 	
 	ret = davinci_cfg_reg_list(da850_evm_nand_pins);
 	if (ret)
 		pr_warn("%s: NAND mux setup failed: %d\n", __func__, ret);
+
+	ret = davinci_cfg_reg_list(da850_tsc2046_pins);
+	if (ret)
+		pr_warn("%s: TSC2046 mux setup failed: %d\n", __func__, ret);
+
+	ret = davinci_cfg_reg_list(da850_key_pins);
+	if (ret)
+		pr_warn("da850_evm_init: key mux setup failed: %d\n",ret);
+	
+	ret = davinci_cfg_reg_list(da850_leds_pins);
+	if (ret)
+		pr_warn("da850_evm_init: leds mux setup failed: %d\n",ret); 
+	
+	ret = davinci_cfg_reg_list(da850_uart0_pins);
+	if (ret)
+		pr_warn("da850_evm_init: UART 0 mux setup failed: %d\n",ret);
+	
+	ret = davinci_cfg_reg_list(da850_uart1_pins);
+	if (ret)
+		pr_warn("da850_evm_init: UART 1 mux setup failed: %d\n",ret);
 
 	da850_evm_init_nand();
 
@@ -1726,14 +2140,12 @@ static __init void da850_evm_init(void)
 	
 	ret = da8xx_register_watchdog();
 	if (ret)
-		pr_warn("%s: watchdog registration failed: %d\n",
-			__func__, ret);
+		pr_warn("%s: watchdog registration failed: %d\n", __func__, ret);
 
 	if (HAS_MMC) {
 		ret = davinci_cfg_reg_list(da850_evm_mmcsd0_pins);
 		if (ret)
-			pr_warn("%s: MMCSD0 mux setup failed: %d\n",
-				__func__, ret);
+			pr_warn("%s: MMCSD0 mux setup failed: %d\n", __func__, ret);
 #if 0	//Modified by HuanYi eagle
 		ret = gpio_request(DA850_MMCSD_CD_PIN, "MMC CD\n");
 		if (ret)
@@ -1750,13 +2162,11 @@ static __init void da850_evm_init(void)
 	
 		ret = da8xx_register_mmcsd0(&da850_mmc_config);
 		if (ret)
-			pr_warn("%s: MMCSD0 registration failed: %d\n",
-				__func__, ret);
+			pr_warn("%s: MMCSD0 registration failed: %d\n", __func__, ret);
 
 		ret = da850_wl12xx_init();
 		if (ret)
-			pr_warn("%s: WL12xx initialization failed: %d\n",
-				__func__, ret);
+			pr_warn("%s: WL12xx initialization failed: %d\n", __func__, ret);
 
 	}
 
@@ -1768,13 +2178,28 @@ static __init void da850_evm_init(void)
 	i2c_register_board_info(0, da850_evm_i2c_devices,
 			ARRAY_SIZE(da850_evm_i2c_devices));
 
+	//da850_leds_pins_init();
+	ret = platform_device_register(&da850_huanyi_keys_device);	
+	if (ret) {		
+		pr_warn("Could not register UI GPIO expander push-buttons"); 		
+	}	
+
+	ret = platform_device_register(&da850_huanyi_leds_device);	
+	if (ret) {		
+		pr_warn("Could not register baseboard GPIO expander LEDS");	
+	}
+
+	
 	/*
 	 * shut down uart 0 and 1; they are not used on the board and
 	 * accessing them causes endless "too much work in irq53" messages
 	 * with arago fs
 	 */
-	__raw_writel(0, IO_ADDRESS(DA8XX_UART1_BASE) + 0x30);
-	__raw_writel(0, IO_ADDRESS(DA8XX_UART0_BASE) + 0x30);
+	//__raw_writel(0, IO_ADDRESS(DA8XX_UART1_BASE) + 0x30);
+	//__raw_writel(0, IO_ADDRESS(DA8XX_UART0_BASE) + 0x30);
+
+	__raw_writel(0x00006000, IO_ADDRESS(DA8XX_UART0_BASE) + 0x30);
+	__raw_writel(0x00006000, IO_ADDRESS(DA8XX_UART1_BASE) + 0x30);
 
 	ret = davinci_cfg_reg_list(da850_evm_mcasp_pins);
 	if (ret)
@@ -1805,9 +2230,9 @@ static __init void da850_evm_init(void)
 	
 	//sharp_lk043t1dg01_pdata.panel_power_ctrl = da850_panel_power_ctrl,	//Modified by HuanYi eagle
 	
-	ret = da8xx_register_lcdc(&sharp_lk043t1dg01_pdata);	//Modified by HuanYi eagle
+	//ret = da8xx_register_lcdc(&sharp_lk043t1dg01_pdata);	//Modified by HuanYi eagle
 	
-	//ret = da8xx_register_lcdc(&huanyi_shx280t39_pdata);	
+	ret = da8xx_register_lcdc(&huanyi_shx280t39_pdata);	
 	if (ret)
 		pr_warn("%s: LCDC registration failed: %d\n", __func__, ret);
 
@@ -1828,27 +2253,45 @@ static __init void da850_evm_init(void)
 		pr_warn("%s: suspend registration failed: %d\n", __func__, ret);
 
 	da850_vpif_init();
-
+#if 0
 	ret = spi_register_board_info(da850evm_spi_info,
 				      ARRAY_SIZE(da850evm_spi_info));
 	if (ret)
 		pr_warn("%s: spi info registration failed: %d\n", __func__,
 			ret);
+#endif
+	
+	ret = spi_register_board_info(fb_ili9341,
+				      ARRAY_SIZE(fb_ili9341));
+	if (ret)
+		pr_warn("%s: fb_ili9341 info registration failed: %d\n", __func__,
+			ret);
+		
+	ret = spi_register_board_info(tsc_ads7846,
+				      ARRAY_SIZE(tsc_ads7846));
+	if (ret)
+		pr_warn("%s: tsc_ads7846 info registration failed: %d\n", __func__,
+			ret);	
 
 	//Modified by HuanYi eagle
-	ret = da8xx_register_spi_bus(0, ARRAY_SIZE(da850evm_spi_info));
+	ret = da8xx_register_spi_bus(0, ARRAY_SIZE(fb_ili9341));
 	if (ret)
 		pr_warn("%s: SPI 0 registration failed: %d\n", __func__, ret);
 	//Modified END
-	ret = da8xx_register_spi_bus(1, ARRAY_SIZE(da850evm_spi_info));
+	ret = da8xx_register_spi_bus(1, ARRAY_SIZE(tsc_ads7846));
 	if (ret)
 		pr_warn("%s: SPI 1 registration failed: %d\n", __func__, ret);
+
+
+	da850_ads7846_init();		//Added by HuanYi eagle
 
 	ret = da850_register_sata(DA850EVM_SATA_REFCLKPN_RATE);
 	if (ret)
 		pr_warn("%s: SATA registration failed: %d\n", __func__, ret);
 
 	da850_evm_setup_mac_addr();
+
+	DA850_evm_usb_init();	//Added by HuanYi eagle
 
 	ret = da8xx_register_rproc();
 	if (ret)

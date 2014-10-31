@@ -774,6 +774,9 @@ enum davinci_da850_index {
 	/* I2C0 function */
 	DA850_I2C0_SDA,
 	DA850_I2C0_SCL,
+
+	/* USB0 function */
+	DA850_USB0_DRVVBUS,	//Added by HuanYi eagle
 	
 // Added by HuanYi eagle
 	/* SPI0 function */

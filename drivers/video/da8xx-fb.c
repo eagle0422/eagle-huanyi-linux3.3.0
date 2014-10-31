@@ -229,6 +229,7 @@ static struct fb_videomode known_lcd_panels[] = {
 		.sync           = FB_SYNC_CLK_INVERT |
 			FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT,
 	},
+#if 0	
 	/* Sharp LK043T1DG01 */
 	[1] = {
 		.name           = "Sharp_LK043T1DG01",
@@ -239,6 +240,23 @@ static struct fb_videomode known_lcd_panels[] = {
 		.right_margin   = 10,
 		.upper_margin   = 2,
 		.lower_margin   = 4,		
+		.hsync_len      = 10,
+		.vsync_len      = 2,
+		.sync           = FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT,
+		.flag           = 0,
+	},
+#endif
+	[1] = {
+		/* Huanyi_SHX280T39 */
+		.name           = "Huanyi_SHX280T39",		
+		.xres           = 240,
+		.yres           = 320,
+		.pixclock       = 6200000,
+		.left_margin    = 20,
+		.right_margin   = 10,
+		.upper_margin   = 2,
+		.lower_margin   = 4,
+		
 		.hsync_len      = 10,
 		.vsync_len      = 2,
 		.sync           = FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT,
@@ -261,22 +279,7 @@ static struct fb_videomode known_lcd_panels[] = {
 		.flag           = 0,
 	},
 #endif	
-	[2] = {
-		/* Huanyi_SHX280T39 */
-		.name           = "Huanyi_SHX280T39",		
-		.xres           = 240,
-		.yres           = 320,
-		.pixclock       = 6200000,
-		.left_margin    = 20,
-		.right_margin   = 10,
-		.upper_margin   = 2,
-		.lower_margin   = 4,
-		
-		.hsync_len      = 10,
-		.vsync_len      = 2,
-		.sync           = FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT,
-		.flag           = 0,
-	},
+	
 };
 
 /* Enable the Raster Engine of the LCD Controller */

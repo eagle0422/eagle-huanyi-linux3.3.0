@@ -489,9 +489,9 @@ static const struct mux_config da850_pins[] = {
 	MUX_CFG(DA850, MII_RXD_2,	3,	20,	15,	8,	false)
 	MUX_CFG(DA850, MII_RXD_1,	3,	24,	15,	8,	false)
 	MUX_CFG(DA850, MII_RXD_0,	3,	28,	15,	8,	false)
+#endif	//Modified END	
 	MUX_CFG(DA850, MDIO_CLK,	4,	0,	15,	8,	false)
 	MUX_CFG(DA850, MDIO_D,		4,	4,	15,	8,	false)
-#endif	//Modified END
 	MUX_CFG(DA850, RMII_TXD_0,	14,	12,	15,	8,	false)
 	MUX_CFG(DA850, RMII_TXD_1,	14,	8,	15,	8,	false)
 	MUX_CFG(DA850, RMII_TXEN,	14,	16,	15,	8,	false)
@@ -515,17 +515,15 @@ static const struct mux_config da850_pins[] = {
 	MUX_CFG(DA850,	AXR_11,		1,	16,	15,	1,	false)
 	MUX_CFG(DA850,	AXR_10,		1,	20,	15,	1,	false)
 	MUX_CFG(DA850,	AXR_9,		1,	24,	15,	1,	false)
-	MUX_CFG(DA850,	AXR_8,		1,	28,	15,	1,	false)
+	//MUX_CFG(DA850,	AXR_8,		1,	28,	15,	1,	false)	//LED4
 	MUX_CFG(DA850,	AXR_7,		2,	0,	15,	1,	false)
-	MUX_CFG(DA850,	AXR_6,		2,	4,	15,	1,	false)
-	MUX_CFG(DA850,	AXR_5,		2,	8,	15,	1,	false)
-	MUX_CFG(DA850,	AXR_4,		2,	12,	15,	1,	false)
-	MUX_CFG(DA850,	AXR_3,		2,	16,	15,	1,	false)
-	MUX_CFG(DA850,	AXR_2,		2,	20,	15,	1,	false)
-	MUX_CFG(DA850,	AXR_1,		2,	24,	15,	1,	false)
-	MUX_CFG(DA850,	AXR_0,		2,	28,	15,	1,	false)
-
-
+	//MUX_CFG(DA850,	AXR_6,		2,	4,	15,	1,	false)	//KEY8
+	//MUX_CFG(DA850,	AXR_5,		2,	8,	15,	1,	false)	//KEY9
+	//MUX_CFG(DA850,	AXR_4,		2,	12,	15,	1,	false)	//KEY1
+	//MUX_CFG(DA850,	AXR_3,		2,	16,	15,	1,	false)	//LED1
+	//MUX_CFG(DA850,	AXR_2,		2,	20,	15,	1,	false)	//LED2
+	//MUX_CFG(DA850,	AXR_1,		2,	24,	15,	1,	false)	//LED3
+	//MUX_CFG(DA850,	AXR_0,		2,	28,	15,	1,	false)	//KEY7
 	/* LCD function */
 	MUX_CFG(DA850, LCD_D_7,		16,	8,	15,	2,	false)
 	MUX_CFG(DA850, LCD_D_6,		16,	12,	15,	2,	false)
@@ -658,9 +656,9 @@ static const struct mux_config da850_pins[] = {
 	MUX_CFG(DA850, GPIO3_13,	7,	8,	15,	8,	false)
 	MUX_CFG(DA850, GPIO4_0,		10,	28,	15,	8,	false)
 	MUX_CFG(DA850, GPIO4_1,		10,	24,	15,	8,	false)
-	MUX_CFG(DA850, GPIO6_9,		13,	24,	15,	8,	false)
-	MUX_CFG(DA850, GPIO6_10,	13,	20,	15,	8,	false)
-	MUX_CFG(DA850, GPIO6_13,	13,	8,	15,	8,	false)
+	//MUX_CFG(DA850, GPIO6_9,		13,	24,	15,	8,	false)
+	//MUX_CFG(DA850, GPIO6_10,	13,	20,	15,	8,	false)
+	//MUX_CFG(DA850, GPIO6_13,	13,	8,	15,	8,	false)
 	MUX_CFG(DA850, RTC_ALARM,	0,	28,	15,	2,	false)
 	/* VPIF Capture */
 	MUX_CFG(DA850, VPIF_DIN0,	15,	4,	15,	1,	false)
@@ -717,61 +715,64 @@ const short da850_i2c1_pins[] __initconst = {
 
 //Added by HuanYi eagle
 
-const short da850_uart0_pins[] __initdata = {
+const short da850_uart0_pins[] __initconst = {
 	//DA850_NUART0_CTS, DA850_NUART0_RTS, 
 	DA850_UART0_RXD, DA850_UART0_TXD,
 	-1
 };
 
-const short da850_uart1_pins[] __initdata = {
+const short da850_uart1_pins[] __initconst = {
 	//DA850_NUART0_CTS, DA850_NUART0_RTS, 
 	DA850_UART1_RXD, DA850_UART1_TXD,
 	-1
 };
 
-const short da850_spi0_pins[] __initdata = {
+const short da850_spi0_pins[] __initconst = {
 	DA850_SPI0_CS_0, DA850_SPI0_CLK, 
 	DA850_SPI0_SOMI, DA850_SPI0_SIMO,
 	-1
 };
 
-const short da850_spi1_pins[] __initdata = {
+const short da850_spi1_pins[] __initconst = {
 	DA850_SPI1_CS_0, DA850_SPI1_CLK, 
 	DA850_SPI1_SOMI, DA850_SPI1_SIMO,
 	-1
 };
 
-const short da850_key_pins[] __initdata = {
-	DA850_GPIO1_12, DA850_GPIO6_8, DA850_GPIO6_9, DA850_GPIO6_10,
-	DA850_GPIO6_11, DA850_GPIO6_13, DA850_GPIO8_7, 
-	DA850_GPIO1_14,	DA850_GPIO1_13,
+const short da850_key_pins[] __initconst = {
+	DA850_GPIO1_12, DA850_GPIO6_8,  DA850_GPIO6_9, 
+	DA850_GPIO6_10,	DA850_GPIO6_11, DA850_GPIO6_13, 
+	DA850_GPIO8_7, 	DA850_GPIO1_14,	DA850_GPIO1_13,
 	-1
 };
 
-const short da850_tsc2046_pins[] __initdata = {
+const short da850_tsc2046_pins[] __initconst = {
 	DA850_GPIO2_14, DA850_GPIO6_12, 
 	DA850_GPIO6_3,
 	-1
 };
 
-const short da850_other_pins[] __initdata = {
+const short da850_other_pins[] __initconst = {
 	DA850_GPIO6_1,DA850_GPIO8_14,	//tw9900
 	DA850_GPIO8_13,					//tlv320aic3
-	//DA850_GPIO6_6,				//bell
 	-1
 };
 
-const short da850_leds_pins[] __initdata = {
-	DA850_GPIO1_11, DA850_GPIO1_10,	//LED
-	DA850_GPIO8_12, DA850_GPIO0_0,	//LED
-	DA850_GPIO8_15,					//LCD_BL
-	DA850_GPIO6_6,					//BELL
+//const short da850_leds_pins[] __initdata = {
+const short da850_leds_pins[] __initconst = {
+	DA850_GPIO1_11, 	//LED1
+	DA850_GPIO1_10,		//LED2
+	DA850_GPIO8_12, 	//LED3
+	//DA850_GPIO1_9,		//LED3
+	DA850_GPIO0_0,		//LED4
+	DA850_GPIO8_15,		//LCD_BL
+	//DA850_GPIO6_6,	//BELL
 	-1	
 };
 
 //Added END
 
-const short da850_lcdcntl_pins[] __initdata = {
+const short da850_lcdcntl_pins[] __initconst = {
 	DA850_LCD_D_0, DA850_LCD_D_1, DA850_LCD_D_2, DA850_LCD_D_3,
 	DA850_LCD_D_4, DA850_LCD_D_5, DA850_LCD_D_6, DA850_LCD_D_7,
 	DA850_LCD_D_8, DA850_LCD_D_9, DA850_LCD_D_10, DA850_LCD_D_11,
@@ -780,7 +781,7 @@ const short da850_lcdcntl_pins[] __initdata = {
 	-1
 };
 
-const short da850_vpif_capture_pins[] __initdata = {
+const short da850_vpif_capture_pins[] __initconst = {
 	DA850_VPIF_DIN0, DA850_VPIF_DIN1, DA850_VPIF_DIN2, DA850_VPIF_DIN3,
 	DA850_VPIF_DIN4, DA850_VPIF_DIN5, DA850_VPIF_DIN6, DA850_VPIF_DIN7,
 	DA850_VPIF_DIN8, DA850_VPIF_DIN9, DA850_VPIF_DIN10, DA850_VPIF_DIN11,
@@ -790,7 +791,7 @@ const short da850_vpif_capture_pins[] __initdata = {
 	-1
 };
 
-const short da850_vpif_display_pins[] __initdata = {
+const short da850_vpif_display_pins[] __initconst = {
 	DA850_VPIF_DOUT0, DA850_VPIF_DOUT1, DA850_VPIF_DOUT2, DA850_VPIF_DOUT3,
 	DA850_VPIF_DOUT4, DA850_VPIF_DOUT5, DA850_VPIF_DOUT6, DA850_VPIF_DOUT7,
 	DA850_VPIF_DOUT8, DA850_VPIF_DOUT9, DA850_VPIF_DOUT10,

@@ -130,7 +130,9 @@ void __init davinci_setup_usb(unsigned mA, unsigned potpgt_ms)
 {
 }
 
-#ifdef CONFIG_ARCH_DAVINCI_DA8XX
+#ifdef CONFIG_ARCH_DAVINCI_DA8XX	//Modified by HuanYi eagle
+//#ifndef CONFIG_ARCH_DAVINCI_DA8XX	//Added by HuanYi eagle
+
 int __init da8xx_register_usb20(unsigned mA, unsigned potpgt)
 {
 	return 0;
@@ -171,4 +173,5 @@ int __init da8xx_register_usb11(struct da8xx_ohci_root_hub *pdata)
 	da8xx_usb11_device.dev.platform_data = pdata;
 	return platform_device_register(&da8xx_usb11_device);
 }
+
 #endif	/* CONFIG_DAVINCI_DA8XX */

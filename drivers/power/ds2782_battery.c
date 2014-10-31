@@ -31,7 +31,22 @@
 #define DS278x_REG_CURRENT_MSB	0x0e
 
 /* EEPROM Block */
-#define DS2782_REG_RSNSP	0x69	/* Sense resistor value */
+//#define DS2782_REG_RSNSP	0x69	/* Sense resistor value */
+
+//Added by HuanYi eagle
+#define DS2782_REG_RSNSP			0x69	/* Sense resistor value */		//20mOhm 0x32 
+#define DS2782_REG_VCHG			0x64	/* Charge Voltage */ 			// 4.2V 0XD7(19.52mV-step) added by eagle
+#define DS2782_REG_AC_MSB			0x62	/* rated battery capacity */		//added by eagle
+#define DS2782_REG_AC_LSB			0x63	/* rated battery capacity */		//added by eagle
+#define DS2782_REG_IMIN			0x65	/* current threshold */			//200mA 0X50(2.5mA step)added by eagle
+#define DS2782_REG_VAE				0x66	/* voltage threshold */			//3.6V 0XB8(19.52mV step)added by eagle
+#define DS2782_REG_IAE				0x67	/* discharge current threshold */		//1.0A 0X64(10mA step)added by eagle
+
+#define DS2782_REG_AS				0x14	/* Age Scalar */				//99% 0X7F(0.78% step)added by eagle
+//Added END
+
+
+
 
 /* Current unit measurement in uA for a 1 milli-ohm sense resistor */
 #define DS2782_CURRENT_UNITS	1563
@@ -119,6 +134,7 @@ static int ds2782_get_current(struct ds278x_info *info, int *current_uA)
 	 * The units of measurement for current are dependent on the value of
 	 * the sense resistor.
 	 */
+#if 0	 //Modified by HuanYi eagle
 	err = ds278x_read_reg(info, DS2782_REG_RSNSP, &sense_res_raw);
 	if (err)
 		return err;
@@ -127,6 +143,8 @@ static int ds2782_get_current(struct ds278x_info *info, int *current_uA)
 		return -ENXIO;
 	}
 	sense_res = 1000 / sense_res_raw;
+#endif
+	sense_res = 20;		//Added by HuanYi eagle
 
 	dev_dbg(&info->client->dev, "sense resistor = %d milli-ohms\n",
 		sense_res);
@@ -393,17 +411,76 @@ static const struct i2c_device_id ds278x_id[] = {
 	{"ds2786", DS2786},
 	{},
 };
+
+static int ds2782_i2c_register(void)
+{
+    struct i2c_board_info info;
+    struct i2c_adapter *adapter;
+    struct i2c_client *client;
+
+    memset(&info, 0, sizeof(struct i2c_board_info));
+	
+	info.addr = 0x34;  //I2C×ÜÏßclientµØÖ·
+
+	strlcpy(info.type, "ds2782", sizeof("ds2782")); //Éè±¸Ãû³Æ
+
+//    printk("++%s\n", __FUNCTION__);
+
+    adapter = i2c_get_adapter(1); //I2C_BUSÎª×ÜÏßºÅ
+    if (!adapter)
+    {
+        printk(KERN_ERR "can't get i2c adapter 0 for da850\n");
+        return -ENODEV;
+    }
+
+    client = i2c_new_device(adapter, &info);
+    i2c_put_adapter(adapter);
+    if (!client)
+    {
+        printk(KERN_ERR "can't add i2c device at 0x%x\n", (unsigned int)info.addr);
+        return -ENODEV;
+    }    
+
+    //ds2786_i2c_client = client;
+    
+ //   printk("--%s \n", __FUNCTION__);    
+
+    return 0;
+}
 MODULE_DEVICE_TABLE(i2c, ds278x_id);
 
 static struct i2c_driver ds278x_battery_driver = {
 	.driver 	= {
 		.name	= "ds2782-battery",
+		.owner  = THIS_MODULE,		//Added by HuanYi eagle
 	},
 	.probe		= ds278x_battery_probe,
 	.remove		= ds278x_battery_remove,
 	.id_table	= ds278x_id,
 };
-module_i2c_driver(ds278x_battery_driver);
+
+//Modified by Huanyi eagle 20140823
+static int __init ds278x_init(void)
+{
+
+//	printk("HuanYi-------------------ds278x_init-------------------\n");
+
+	int ret = i2c_add_driver(&ds278x_battery_driver);
+	
+	ds2782_i2c_register(); //×¢²áI2CÉè±¸
+
+	return ret;
+}
+
+module_init(ds278x_init);
+
+static void __exit ds278x_exit(void)
+{
+	i2c_del_driver(&ds278x_battery_driver);
+}
+module_exit(ds278x_exit);
+
+//module_i2c_driver(ds278x_battery_driver);		//Modified by HuanYi eagle
 
 MODULE_AUTHOR("Ryan Mallon");
 MODULE_DESCRIPTION("Maxim/Dallas DS2782 Stand-Alone Fuel Gauage IC driver");

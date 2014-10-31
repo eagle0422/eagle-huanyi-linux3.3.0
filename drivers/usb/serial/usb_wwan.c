@@ -36,6 +36,10 @@
 #include <linux/serial.h>
 #include "usb-wwan.h"
 
+//Added by HuanYi egale
+#define HW_bcdUSB 0x0110
+#define HUAWEI_VENDOR_ID 0x12d1
+//Added END
 void usb_wwan_dtr_rts(struct usb_serial_port *port, int on)
 {
 	struct usb_serial *serial = port->serial;
@@ -200,6 +204,11 @@ int usb_wwan_write(struct tty_struct *tty, struct usb_serial_port *port,
 {
 	struct usb_wwan_port_private *portdata;
 	struct usb_wwan_intf_private *intfdata;
+	
+//Added by HuanYi eagle
+	struct usb_host_endpoint *ep;
+//Added END	
+	
 	int i;
 	int left, todo;
 	struct urb *this_urb = NULL;	/* spurious */
@@ -236,6 +245,17 @@ int usb_wwan_write(struct tty_struct *tty, struct usb_serial_port *port,
 		/* send the data */
 		memcpy(this_urb->transfer_buffer, buf, todo);
 		this_urb->transfer_buffer_length = todo;
+
+//Added by HuanYi eagle
+		if((HUAWEI_VENDOR_ID == port->serial->dev->descriptor.idVendor)
+				&& (HW_bcdUSB != port->serial->dev->descriptor.bcdUSB)){
+			ep = usb_pipe_endpoint(this_urb->dev, this_urb->pipe);
+			if(ep && (0 != this_urb->transfer_buffer_length)
+					&& (0 == this_urb->transfer_buffer_length % ep->desc.wMaxPacketSize)){
+				this_urb->transfer_flags |= URB_ZERO_PACKET;
+			}
+		}
+//Added END
 
 		spin_lock_irqsave(&intfdata->susp_lock, flags);
 		if (intfdata->suspended) {

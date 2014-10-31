@@ -607,12 +607,13 @@ struct da8xx_lcdc_platform_data sharp_lcd035q3dg01_pdata = {
 	.controller_data	= &lcd_cfg,
 	.type			= "Sharp_LCD035Q3DG01",
 };
-
+#if 0
 struct da8xx_lcdc_platform_data sharp_lk043t1dg01_pdata = {
 	.manu_name		= "sharp",
 	.controller_data	= &lcd_cfg,
 	.type			= "Sharp_LK043T1DG01",
 };
+#endif
 //Added by HuanYi eagle
 struct da8xx_lcdc_platform_data huanyi_shx280t39_pdata = {
 	.manu_name		= "huanyi",
