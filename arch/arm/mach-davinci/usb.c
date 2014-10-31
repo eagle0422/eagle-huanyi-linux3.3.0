@@ -130,8 +130,8 @@ void __init davinci_setup_usb(unsigned mA, unsigned potpgt_ms)
 {
 }
 
-#ifdef CONFIG_ARCH_DAVINCI_DA8XX	//Modified by HuanYi eagle
-//#ifndef CONFIG_ARCH_DAVINCI_DA8XX	//Added by HuanYi eagle
+//#ifdef CONFIG_ARCH_DAVINCI_DA8XX	//Modified by HuanYi eagle
+#ifndef CONFIG_ARCH_DAVINCI_DA8XX	//Added by HuanYi eagle
 
 int __init da8xx_register_usb20(unsigned mA, unsigned potpgt)
 {
