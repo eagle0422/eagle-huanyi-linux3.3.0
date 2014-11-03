@@ -161,6 +161,7 @@ extern const short da850_key_pins[];
 extern const short da850_tsc2046_pins[];
 extern const short da850_other_pins[];
 extern const short da850_leds_pins[];
+extern const short da850_usb20_pins[];
 //Added END
 
 extern const short da850_lcdcntl_pins[];

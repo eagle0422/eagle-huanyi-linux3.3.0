@@ -770,6 +770,14 @@ const short da850_leds_pins[] __initconst = {
 	-1	
 };
 
+
+const short da850_usb20_pins[] __initconst = {
+	DA850_USB0_DRVVBUS, 
+	//DA850_USB_REFCLKIN,
+	-1
+};
+
+
 //Added END
 
 const short da850_lcdcntl_pins[] __initconst = {

@@ -1167,16 +1167,18 @@ static struct davinci_uart_config da850_evm_uart_config __initdata = {
 /*
  * USB1 VBUS is controlled by GPIO1[15], over-current is reported on GPIO2[4].
  */
+
+#if 0
 //#define ON_BD_USB_DRV	GPIO_TO_PIN(1, 15)
 #define ON_BD_USB_DRV	GPIO_TO_PIN(2, 6)
 #define ON_BD_USB_OVC	GPIO_TO_PIN(2, 4)
 
 static const short DA850_evm_usb11_pins[] = {
-	DA850_GPIO2_6, DA850_GPIO2_4,
+	//DA850_GPIO2_6, DA850_GPIO2_4,
 	-1
 };
 
-static da8xx_ocic_handler_t DA850_evm_usb_ocic_handler;
+
 
 static int DA850_evm_usb_set_power(unsigned port, int on)
 {
@@ -1193,6 +1195,10 @@ static int DA850_evm_usb_get_oci(unsigned port)
 {
 	return !gpio_get_value(ON_BD_USB_OVC);
 }
+#endif
+#define ON_BD_USB_OVC	GPIO_TO_PIN(2, 4)
+
+static da8xx_ocic_handler_t DA850_evm_usb_ocic_handler;
 
 static irqreturn_t DA850_evm_usb_ocic_irq(int, void *);
 
@@ -1217,9 +1223,9 @@ static int DA850_evm_usb_ocic_notify(da8xx_ocic_handler_t handler)
 }
 
 static struct da8xx_ohci_root_hub DA850_evm_usb11_pdata = {
-	.set_power	= DA850_evm_usb_set_power,
-	.get_power	= DA850_evm_usb_get_power,
-	.get_oci	= DA850_evm_usb_get_oci,
+	.set_power	= NULL,//DA850_evm_usb_set_power,
+	.get_power	= NULL,//DA850_evm_usb_get_power,
+	.get_oci	= NULL,//DA850_evm_usb_get_oci,
 	.ocic_notify	= DA850_evm_usb_ocic_notify,
 
 	/* TPS2065 switch @ 5V */
@@ -1270,6 +1276,7 @@ static __init void DA850_evm_usb_init(void)
 
 	__raw_writel(cfgchip2, DA8XX_SYSCFG0_VIRT(DA8XX_CFGCHIP2_REG));
 
+#if 0
 	/* USB_REFCLKIN is not used. */
 	ret = davinci_cfg_reg(DA850_USB0_DRVVBUS);
 	if (ret)
@@ -1285,7 +1292,7 @@ static __init void DA850_evm_usb_init(void)
 			pr_warning("%s: USB 2.0 registration failed: %d\n",
 				   __func__, ret);
 	}
-
+	
 	ret = davinci_cfg_reg_list(DA850_evm_usb11_pins);
 	if (ret) {
 		pr_warning("%s: USB 1.1 PinMux setup failed: %d\n",
@@ -1308,6 +1315,28 @@ static __init void DA850_evm_usb_init(void)
 		return;
 	}
 	gpio_direction_input(ON_BD_USB_OVC);
+	
+
+
+	ret = davinci_cfg_reg(DA850_USB0_DRVVBUS);
+	if (ret)
+		pr_warning("%s: USB 2.0 PinMux setup failed: %d\n",
+			   __func__, ret);
+	else {
+		/*
+		 * TPS2065 switch @ 5V supplies 1 A (sustains 1.5 A),
+		 * with the power on to power good time of 3 ms.
+		 */
+		ret = da8xx_register_usb20(1000, 3);
+		if (ret)
+			pr_warning("%s: USB 2.0 registration failed: %d\n",
+				   __func__, ret);
+	}
+#endif	
+	ret = da8xx_register_usb20(1000, 3);
+	if (ret)
+		pr_warning("%s: USB 2.0 registration failed: %d\n",
+			__func__, ret);
 
 	ret = da8xx_register_usb11(&DA850_evm_usb11_pdata);
 	if (ret)
@@ -1316,9 +1345,6 @@ static __init void DA850_evm_usb_init(void)
 }
 
 //Added END
-
-
-
 
 /* davinci da850 evm audio machine driver */
 static u8 da850_iis_serializer_direction[] = {
@@ -1418,20 +1444,6 @@ static int da850_lcd_hw_init(void)
 
 //Added by HuangYi eagle
 
-static int da850_leds_pins_init(void)
-{
-	int status;
-
-	status = gpio_request(DA850_LED_1, "lcd rst\n");
-	if (status < 0){
-		printk("DA850_LED_1 return\n");
-		gpio_free(DA850_LED_1);
-		return status;
-	}
-	gpio_direction_output(DA850_LED_1, 0);
-	gpio_set_value(DA850_LED_1, 0);
-
-}
 static int da850_lcd_hw_init(void)
 {
 	int status;
@@ -2132,11 +2144,17 @@ static __init void da850_evm_init(void)
 	ret = davinci_cfg_reg_list(da850_uart1_pins);
 	if (ret)
 		pr_warn("da850_evm_init: UART 1 mux setup failed: %d\n",ret);
+	
+	ret = davinci_cfg_reg_list(da850_usb20_pins);
+	if (ret)
+		pr_warn("%s: USB2.0 mux setup failed: %d\n", __func__, ret);
 
 	da850_evm_init_nand();
 
 	platform_add_devices(da850_evm_devices,ARRAY_SIZE(da850_evm_devices));
 	//Added END
+
+	DA850_evm_usb_init();	//Added by HuanYi eagle
 	
 	ret = da8xx_register_watchdog();
 	if (ret)
@@ -2288,10 +2306,8 @@ static __init void da850_evm_init(void)
 	ret = da850_register_sata(DA850EVM_SATA_REFCLKPN_RATE);
 	if (ret)
 		pr_warn("%s: SATA registration failed: %d\n", __func__, ret);
-
-	da850_evm_setup_mac_addr();
-
-	DA850_evm_usb_init();	//Added by HuanYi eagle
+	
+	//da850_evm_setup_mac_addr();	
 
 	ret = da8xx_register_rproc();
 	if (ret)

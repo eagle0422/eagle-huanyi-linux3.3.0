@@ -86,7 +86,7 @@ static int init_display(struct fbtft_par *par)
 
 	write_reg(par, 0x2A, 0x00, 0x00, 0x00, 0xEF);
 	write_reg(par, 0x2B, 0x00, 0x00, 0x01, 0x3F);
-	printk("------------------davinci 3.8.0 test---------------------\n");
+//	printk("------------------davinci 3.8.0 test---------------------\n");
 	//write_reg(par, 0x2C);
 #endif
 
