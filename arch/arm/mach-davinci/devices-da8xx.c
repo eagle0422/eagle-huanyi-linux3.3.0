@@ -1104,3 +1104,154 @@ int __init da850_register_sata(unsigned long refclkpn)
 	return platform_device_register(&da850_sata_device);
 }
 #endif
+#if 0
+//Added by HuanYi eagle
+int __init da8xx_register_sata(void)
+{
+	return platform_device_register(&da850_ahci_device);
+}
+
+#define CFGCHIP2	DA8XX_SYSCFG_VIRT(DA8XX_CFGCHIP2_REG)	
+/*
+ * Configure the USB PHY for DA8xx platforms.
+ */
+static int da8xx_usb_phy_config(struct device *dev, u8 mode, int is_on)
+{
+	u32 cfgchip2;
+
+	/*
+	 * Start the on-chip PHY and its PLL.
+	 */
+	cfgchip2 = __raw_readl(CFGCHIP2);
+
+	if (is_on) {
+		/* Check whether USB0 PHY is already powered on */
+		if (cfgchip2 & CFGCHIP2_PHY_PLLON)
+			return 0;
+
+		cfgchip2 &= ~(CFGCHIP2_RESET | CFGCHIP2_PHYPWRDN |
+				CFGCHIP2_OTGPWRDN | CFGCHIP2_OTGMODE |
+				CFGCHIP2_REFFREQ);
+		cfgchip2 |= CFGCHIP2_SESENDEN | CFGCHIP2_VBDTCTEN |
+				CFGCHIP2_PHY_PLLON | CFGCHIP2_REFFREQ_24MHZ;
+		switch (mode) {
+		case MUSB_OTG:
+		case MUSB_DUAL_ROLE:
+			cfgchip2 |= CFGCHIP2_NO_OVERRIDE;
+			break;
+		case MUSB_HOST:
+			cfgchip2 |= CFGCHIP2_FORCE_HOST;
+			break;
+		case MUSB_PERIPHERAL:
+			cfgchip2 |= CFGCHIP2_FORCE_DEVICE;
+			break;
+		default:
+			pr_err("Trying to set unsupported mode");
+			break;
+		}
+	} else {
+		/* Ensure that usb1.1 interface clk is not being sourced from
+		 * usb0 interface.  If so do not power down usb0 PHY
+		 */
+		if ((cfgchip2 & CFGCHIP2_USB1SUSPENDM) &&
+			!(cfgchip2 & CFGCHIP2_USB1PHYCLKMUX)) {
+			printk(KERN_WARNING "USB1 interface active -\
+				Cannot Power down USB0 PHY\n");
+			return 0;
+		}
+
+		cfgchip2 &= ~CFGCHIP2_PHY_PLLON;
+		cfgchip2 |= CFGCHIP2_PHYPWRDN | CFGCHIP2_OTGPWRDN;
+	}
+
+	__raw_writel(cfgchip2, CFGCHIP2);
+
+	if (is_on) {
+		while (!(__raw_readl(CFGCHIP2) & CFGCHIP2_PHYCLKGD))
+			cpu_relax();
+		pr_info("Waiting for USB PHY clock good...\n");
+	}
+
+	return 0;
+}
+
+static struct resource usb_resources[] = {
+	{
+		.start  = DA8XX_USB0_BASE,
+		.end    = DA8XX_USB0_BASE + 0x5ff,
+		.flags  = IORESOURCE_MEM,
+	},
+	{
+		.start  = IRQ_DA8XX_USB_INT,
+		.flags  = IORESOURCE_IRQ,
+	},
+};
+
+static struct plat_res_data da8xx_usb_res;
+static struct usb_plat_data da8xx_usb_plat_data;
+
+/*
+ * Initialize DA8xx related MUSB information such as Memory maps, IRQ etc.
+ * Since DA8xx supprot a single MUSB controller initialize the instance
+ * value to 1.
+ */
+void da8xx_usb20_configure(struct musb_hdrc_platform_data *pdata, u8 num_inst)
+{
+	pdata->phy_config = da8xx_usb_phy_config;
+
+	da8xx_usb_res.plat_data = pdata;
+	da8xx_usb_res.res_data = usb_resources;
+	da8xx_usb_res.num_res = ARRAY_SIZE(usb_resources);
+
+	da8xx_usb_plat_data.prdata = &da8xx_usb_res;
+	da8xx_usb_plat_data.num_inst = num_inst;
+
+	/* There are multiple USB instances on DA8xx platform hence populate
+	 * the clock information accordingly.  This overrides the generic
+	 * clock setting done in usb.c file.
+	 */
+	pdata->clock = "usb20";
+
+	/* Call the generic platform register function.  The USB
+	 * configuration w.r.t no. of ep's, capabalities etc. are common
+	 * across DA8xx/OMAPL13x platforms and hence allow the generic handler
+	 * to populate the information.
+	 */
+	//setup_usb(&da8xx_usb_plat_data);
+	davinci_setup_usb(&da8xx_usb_plat_data);
+}
+
+static struct resource da8xx_usb11_resources[] = {
+	[0] = {
+		.start	= DA8XX_USB1_BASE,
+		.end	= DA8XX_USB1_BASE + SZ_4K - 1,
+		.flags	= IORESOURCE_MEM,
+	},
+	[1] = {
+		.start	= IRQ_DA8XX_IRQN,
+		.end	= IRQ_DA8XX_IRQN,
+		.flags	= IORESOURCE_IRQ,
+	},
+};
+
+static u64 da8xx_usb11_dma_mask = DMA_BIT_MASK(32);
+
+static struct platform_device da8xx_usb11_device = {
+	.name		= "ohci",
+	.id			= 0,
+	.dev = {
+		.dma_mask		= &da8xx_usb11_dma_mask,
+		.coherent_dma_mask	= DMA_BIT_MASK(32),
+	},
+	.num_resources	= ARRAY_SIZE(da8xx_usb11_resources),
+	.resource	= da8xx_usb11_resources,
+};
+
+int __init da8xx_register_usb11(struct da8xx_ohci_root_hub *pdata)
+{
+	da8xx_usb11_device.dev.platform_data = pdata;
+	return platform_device_register(&da8xx_usb11_device);
+}
+
+//Added END
+#endif

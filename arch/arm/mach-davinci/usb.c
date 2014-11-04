@@ -43,7 +43,8 @@ static struct musb_hdrc_config musb_config = {
 
 static struct musb_hdrc_platform_data usb_data = {
 	/* OTG requires a Mini-AB connector */
-	.mode           = MUSB_OTG,
+	//.mode           = MUSB_OTG,
+	.mode           = MUSB_HOST,
 	.clock		= "usb",
 	.config		= &musb_config,
 };
@@ -83,6 +84,8 @@ static struct platform_device usb_dev = {
 
 void __init davinci_setup_usb(unsigned mA, unsigned potpgt_ms)
 {
+	printk("------------%s-------------\n",__func__);
+
 	usb_data.power = mA > 510 ? 255 : mA / 2;
 	usb_data.potpgt = (potpgt_ms + 1) / 2;
 
@@ -119,7 +122,6 @@ int __init da8xx_register_usb20(unsigned mA, unsigned potpgt)
 	usb_dev.resource = da8xx_usb20_resources;
 	usb_dev.num_resources = ARRAY_SIZE(da8xx_usb20_resources);
 	usb_dev.name = "musb-da8xx";
-
 	return platform_device_register(&usb_dev);
 }
 #endif	/* CONFIG_DAVINCI_DA8XX */
@@ -131,13 +133,13 @@ void __init davinci_setup_usb(unsigned mA, unsigned potpgt_ms)
 }
 
 //#ifdef CONFIG_ARCH_DAVINCI_DA8XX	//Modified by HuanYi eagle
-#ifndef CONFIG_ARCH_DAVINCI_DA8XX	//Added by HuanYi eagle
+//#ifndef CONFIG_ARCH_DAVINCI_DA8XX	//Added by HuanYi eagle
 
 int __init da8xx_register_usb20(unsigned mA, unsigned potpgt)
 {
 	return 0;
 }
-#endif
+//#endif
 
 #endif  /* CONFIG_USB_MUSB_HDRC */
 

@@ -1204,6 +1204,7 @@ static irqreturn_t DA850_evm_usb_ocic_irq(int, void *);
 
 static int DA850_evm_usb_ocic_notify(da8xx_ocic_handler_t handler)
 {
+#if 1
 	int irq 	= gpio_to_irq(ON_BD_USB_OVC);
 	int error	= 0;
 
@@ -1220,6 +1221,8 @@ static int DA850_evm_usb_ocic_notify(da8xx_ocic_handler_t handler)
 		free_irq(irq, NULL);
 
 	return error;
+#endif
+
 }
 
 static struct da8xx_ohci_root_hub DA850_evm_usb11_pdata = {
@@ -1246,93 +1249,19 @@ static __init void DA850_evm_usb_init(void)
 	/*
 	 * Set up USB clock/mode in the CFGCHIP2 register.
 	 * FYI:  CFGCHIP2 is 0x0000ef00 initially.
-	 */
+	 */	
+
 	cfgchip2 = __raw_readl(DA8XX_SYSCFG0_VIRT(DA8XX_CFGCHIP2_REG));
 
-	/* USB2.0 PHY reference clock is 24 MHz */
-	cfgchip2 &= ~CFGCHIP2_REFFREQ;
-	cfgchip2 |=  CFGCHIP2_REFFREQ_24MHZ;
-
-	/*
-	 * Select internal reference clock for USB 2.0 PHY
-	 * and use it as a clock source for USB 1.1 PHY
-	 * (this is the default setting anyway).
-	 */
-	cfgchip2 &= ~CFGCHIP2_USB1PHYCLKMUX;
-	cfgchip2 |=  CFGCHIP2_USB2PHYCLKMUX;
-
-	/*
-	 * We have to override VBUS/ID signals when MUSB is configured into the
-	 * host-only mode -- ID pin will float if no cable is connected, so the
-	 * controller won't be able to drive VBUS thinking that it's a B-device.
-	 * Otherwise, we want to use the OTG mode and enable VBUS comparators.
-	 */
-	cfgchip2 &= ~CFGCHIP2_OTGMODE;
-#ifdef	CONFIG_USB_MUSB_HOST
-	cfgchip2 |=  CFGCHIP2_FORCE_HOST;
-#else
-	cfgchip2 |=  CFGCHIP2_SESENDEN | CFGCHIP2_VBDTCTEN;
-#endif
+	cfgchip2 &= ~(CFGCHIP2_RESET | CFGCHIP2_PHYPWRDN | CFGCHIP2_OTGPWRDN | 
+				  CFGCHIP2_OTGMODE | CFGCHIP2_REFFREQ);		
+	cfgchip2 |= CFGCHIP2_SESENDEN | CFGCHIP2_VBDTCTEN |	CFGCHIP2_PHY_PLLON | 
+				CFGCHIP2_REFFREQ_24MHZ;
+	
+	cfgchip2 |= CFGCHIP2_FORCE_HOST;
 
 	__raw_writel(cfgchip2, DA8XX_SYSCFG0_VIRT(DA8XX_CFGCHIP2_REG));
 
-#if 0
-	/* USB_REFCLKIN is not used. */
-	ret = davinci_cfg_reg(DA850_USB0_DRVVBUS);
-	if (ret)
-		pr_warning("%s: USB 2.0 PinMux setup failed: %d\n",
-			   __func__, ret);
-	else {
-		/*
-		 * TPS2065 switch @ 5V supplies 1 A (sustains 1.5 A),
-		 * with the power on to power good time of 3 ms.
-		 */
-		ret = da8xx_register_usb20(1000, 3);
-		if (ret)
-			pr_warning("%s: USB 2.0 registration failed: %d\n",
-				   __func__, ret);
-	}
-	
-	ret = davinci_cfg_reg_list(DA850_evm_usb11_pins);
-	if (ret) {
-		pr_warning("%s: USB 1.1 PinMux setup failed: %d\n",
-			   __func__, ret);
-		return;
-	}
-
-	ret = gpio_request(ON_BD_USB_DRV, "ON_BD_USB_DRV");
-	if (ret) {
-		printk(KERN_ERR "%s: failed to request GPIO for USB 1.1 port "
-		       "power control: %d\n", __func__, ret);
-		return;
-	}
-	gpio_direction_output(ON_BD_USB_DRV, 0);
-
-	ret = gpio_request(ON_BD_USB_OVC, "ON_BD_USB_OVC");
-	if (ret) {
-		printk(KERN_ERR "%s: failed to request GPIO for USB 1.1 port "
-		       "over-current indicator: %d\n", __func__, ret);
-		return;
-	}
-	gpio_direction_input(ON_BD_USB_OVC);
-	
-
-
-	ret = davinci_cfg_reg(DA850_USB0_DRVVBUS);
-	if (ret)
-		pr_warning("%s: USB 2.0 PinMux setup failed: %d\n",
-			   __func__, ret);
-	else {
-		/*
-		 * TPS2065 switch @ 5V supplies 1 A (sustains 1.5 A),
-		 * with the power on to power good time of 3 ms.
-		 */
-		ret = da8xx_register_usb20(1000, 3);
-		if (ret)
-			pr_warning("%s: USB 2.0 registration failed: %d\n",
-				   __func__, ret);
-	}
-#endif	
 	ret = da8xx_register_usb20(1000, 3);
 	if (ret)
 		pr_warning("%s: USB 2.0 registration failed: %d\n",
